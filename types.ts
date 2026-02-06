@@ -1,0 +1,27 @@
+export interface Resident {
+  id: string;
+  nik: string;
+  name: string;
+  address: string;
+  block: string;
+  hasVoted: boolean;
+  isPresent: boolean; // For attendance
+}
+
+export interface Candidate {
+  id: string;
+  number: number;
+  name: string;
+  vision: string;
+  mission: string;
+  imageUrl: string;
+  voteCount: number;
+}
+
+export interface AnalyticsData {
+  totalResidents: number;
+  totalVotes: number;
+  turnoutPercentage: number;
+  presentCount: number;
+  absentCount: number;
+}
