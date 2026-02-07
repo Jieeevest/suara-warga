@@ -3,7 +3,11 @@ export interface Resident {
   nik: string;
   name: string;
   address: string;
-  block: string;
+  rt: string;
+  rw: string;
+  phoneNumber: string;
+  status: "Aktif" | "Pindah" | "Meninggal";
+  block?: string; // Optional/Deprecated
   hasVoted: boolean;
   isPresent: boolean; // For attendance
 }
@@ -33,4 +37,5 @@ export interface User {
   name: string;
   role: UserRole;
   username: string;
+  password?: string; // For mock auth
 }

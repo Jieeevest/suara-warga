@@ -8,6 +8,7 @@ import Residents from "./pages/Residents";
 import Candidates from "./pages/Candidates";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
+import AccessControl from "./pages/AccessControl";
 
 const AppContent: React.FC = () => {
   const { currentUser } = useApp();
@@ -33,6 +34,8 @@ const AppContent: React.FC = () => {
         return <Residents />;
       case "candidates":
         return <Candidates />;
+      case "access-control":
+        return <AccessControl />;
       default:
         return <Dashboard />;
     }

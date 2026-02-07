@@ -24,6 +24,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) => {
     { id: "candidates", label: "Kandidat", icon: Settings },
   ];
 
+  if (currentUser?.role === "admin") {
+    menuItems.push({
+      id: "access-control",
+      label: "Hak Akses",
+      icon: Users, // Using Users icon again, or maybe Shield/Lock if available
+    });
+  }
+
   return (
     <div className="w-64 bg-white text-slate-800 min-h-screen flex flex-col fixed left-0 top-0 overflow-y-auto border-r border-slate-200 shadow-sm">
       <div className="p-6 border-b border-slate-100">
