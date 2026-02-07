@@ -25,3 +25,12 @@ export interface AnalyticsData {
   presentCount: number;
   absentCount: number;
 }
+
+export type UserRole = "admin" | "resident";
+
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+  username: string;
+}
