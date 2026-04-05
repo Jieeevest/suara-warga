@@ -1,10 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
-import { Candidate, AnalyticsData } from "../types";
+import type { AnalyticsData, Candidate } from "@/lib/types";
 
-// Initialize AI client lazily to avoid errors before env vars are available
 let aiClient: GoogleGenAI | null = null;
 
-const getAIClient = () => {
+function getAIClient() {
   if (!aiClient) {
     const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -12,21 +11,24 @@ const getAIClient = () => {
     }
     aiClient = new GoogleGenAI({ apiKey });
   }
-  return aiClient;
-};
 
-export const generateElectionAnalysis = async (
+  return aiClient;
+}
+
+export async function generateElectionAnalysis(
   analytics: AnalyticsData,
   candidates: Candidate[],
-): Promise<string> => {
+) {
   try {
     const candidatesData = candidates
-      .map((c) => `Kandidat No ${c.number} (${c.name}): ${c.voteCount} suara`)
+      .map((candidate) => {
+        return `Kandidat No ${candidate.number} (${candidate.name}): ${candidate.voteCount} suara`;
+      })
       .join(", ");
 
     const prompt = `
       Bertindaklah sebagai analis politik untuk pemilihan tingkat RT/RW lokal.
-      
+
       Data Pemilihan Saat Ini:
       - Total Pemilih Terdaftar: ${analytics.totalResidents}
       - Total Suara Masuk: ${analytics.totalVotes}
@@ -40,8 +42,7 @@ export const generateElectionAnalysis = async (
       3. Saran singkat untuk panitia jika partisipasi masih rendah (di bawah 70%).
     `;
 
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
+    const response = await getAIClient().models.generateContent({
       model: "gemini-2.0-flash-exp",
       contents: prompt,
     });
@@ -51,4 +52,4 @@ export const generateElectionAnalysis = async (
     console.error("Gemini Error:", error);
     return "Maaf, terjadi kesalahan saat menghubungi asisten AI.";
   }
-};
+}

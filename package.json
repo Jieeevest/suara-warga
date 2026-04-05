@@ -2,23 +2,34 @@
   "name": "suarawarga---e-voting-rt/rw",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "generate:voting-keys": "node scripts/generate-voting-rsa.mjs"
   },
   "dependencies": {
+    "@google/genai": "^1.37.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/nodemailer": "^8.0.0",
+    "better-sqlite3": "^12.8.0",
+    "lucide-react": "^0.562.0",
+    "next": "^16.0.0",
+    "nodemailer": "^8.0.4",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "@google/genai": "^1.37.0",
-    "lucide-react": "^0.562.0",
-    "recharts": "^3.6.0"
+    "react-select": "^5.10.2",
+    "recharts": "^3.6.0",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "tailwindcss": "^4.1.12",
+    "typescript": "~5.8.2"
   }
 }

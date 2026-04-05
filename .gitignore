@@ -8,8 +8,11 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
+.next
+*.tsbuildinfo
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
 *.local
 
 # Editor directories and files
@@ -26,4 +29,3 @@ dist-ssr
 # Environment variables
 .env
 .env.local
-
