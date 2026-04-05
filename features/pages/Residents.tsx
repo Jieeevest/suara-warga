@@ -7,6 +7,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import * as yup from "yup";
 import AppSelect, { type SelectOption } from "@/features/components/AppSelect";
 import Modal from "@/features/components/Modal";
+import { useToast } from "@/features/components/ToastProvider";
 import { useApp } from "@/features/context/AppContext";
 import type { Resident } from "@/lib/types";
 
@@ -59,6 +60,7 @@ const inputClass = (hasError: boolean) =>
 
 export default function Residents() {
   const { residents, addResident, deleteResident, importResidents, updateResident, votingStatus } = useApp();
+  const { showToast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -188,7 +190,11 @@ export default function Residents() {
       const payload = (await response.json().catch(() => null)) as
         | { error?: string }
         | null;
-      window.alert(payload?.error || "Gagal mengambil hak akses warga.");
+      showToast({
+        title: "Gagal mengambil hak akses",
+        description: payload?.error || "Hak akses warga tidak dapat dimuat.",
+        tone: "error",
+      });
       return;
     }
 
@@ -327,12 +333,20 @@ export default function Residents() {
           throw new Error(payload?.error || "Gagal mengirim email akses.");
         }
 
-        window.alert(`Email akses berhasil dikirim ke ${resident.email}.`);
+        showToast({
+          title: "Email akses terkirim",
+          description: `Hak akses berhasil dikirim ke ${resident.email}.`,
+          tone: "success",
+        });
       })
       .catch((error: unknown) => {
         const message =
           error instanceof Error ? error.message : "Gagal mengirim email akses.";
-        window.alert(message);
+        showToast({
+          title: "Gagal mengirim email akses",
+          description: message,
+          tone: "error",
+        });
       })
       .finally(() => {
         setSendingResidentId(null);
@@ -407,13 +421,19 @@ export default function Residents() {
       }
 
       const result = await importResidents(importedResidents);
-      window.alert(
-        `Import selesai. ${result.created} data baru ditambahkan dan ${result.updated} data diperbarui.`,
-      );
+      showToast({
+        title: "Import Excel selesai",
+        description: `${result.created} data baru ditambahkan dan ${result.updated} data diperbarui.`,
+        tone: "success",
+      });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Gagal mengimpor file Excel warga.";
-      window.alert(message);
+      showToast({
+        title: "Gagal mengimpor data warga",
+        description: message,
+        tone: "error",
+      });
     } finally {
       setIsImporting(false);
       event.target.value = "";

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/features/components/Sidebar";
+import { ToastProvider } from "@/features/components/ToastProvider";
 import { AppProvider, useApp } from "@/features/context/AppContext";
 import AccessControl from "@/features/pages/AccessControl";
 import Attendance from "@/features/pages/Attendance";
@@ -144,7 +145,9 @@ function AppContent() {
 export function AppShell({ initialData }: { initialData: BootstrapData }) {
   return (
     <AppProvider initialData={initialData}>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </AppProvider>
   );
 }
