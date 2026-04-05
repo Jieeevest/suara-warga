@@ -8,12 +8,23 @@ import type {
   VotingStatus,
 } from "./types";
 
+function generateResidentPassword(length = 6) {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  return Array.from({ length }, () =>
+    characters[Math.floor(Math.random() * characters.length)],
+  ).join("");
+}
+
 function mapResident(row: Record<string, unknown>): Resident {
   return {
     id: String(row.id),
     nik: String(row.nik),
     name: String(row.name),
     email: String(row.email || ""),
+    birthPlace: String(row.birth_place || ""),
+    gender: (String(row.gender || "") as Resident["gender"]),
+    identityIssuedPlace: String(row.identity_issued_place || ""),
+    occupation: String(row.occupation || ""),
     address: String(row.address),
     rt: String(row.rt),
     rw: String(row.rw),
@@ -103,8 +114,11 @@ export function findResidentSessionByCredentials(
   username: string,
   password: string,
 ) {
-  const resident = findResidentByNik(username);
-  if (!resident || password !== "password" || resident.status !== "Aktif") {
+  const row = db.prepare("SELECT * FROM residents WHERE nik = ?").get(username);
+  const resident = row ? mapResident(row as Record<string, unknown>) : null;
+  const residentPassword = row ? String((row as Record<string, unknown>).password || "") : "";
+
+  if (!resident || password !== residentPassword || resident.status !== "Aktif") {
     return null;
   }
 
@@ -114,6 +128,34 @@ export function findResidentSessionByCredentials(
     role: "resident",
     username: resident.nik,
   } satisfies SessionUser;
+}
+
+export function findResidentAccessById(id: string) {
+  const row = db
+    .prepare("SELECT id, name, nik, email, password, status FROM residents WHERE id = ?")
+    .get(id) as
+    | {
+        id?: string;
+        name?: string;
+        nik?: string;
+        email?: string;
+        password?: string;
+        status?: string;
+      }
+    | undefined;
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    nik: String(row.nik),
+    email: String(row.email || ""),
+    password: String(row.password || ""),
+    status: row.status as Resident["status"],
+  };
 }
 
 export function markResidentPresent(residentId: string) {
@@ -160,6 +202,7 @@ export function getSessionUserById(role: string, id: string) {
 export function createResident(
   input: Omit<Resident, "id" | "hasVoted" | "isPresent">,
 ) {
+  const generatedPassword = generateResidentPassword();
   const resident: Resident = {
     ...input,
     id: randomUUID(),
@@ -169,15 +212,20 @@ export function createResident(
 
   db.prepare(`
     INSERT INTO residents (
-      id, nik, name, email, address, rt, rw, phone_number, status, block, has_voted, is_present
+      id, nik, name, email, birth_place, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
   `).run(
     resident.id,
     resident.nik,
     resident.name,
     resident.email,
+    resident.birthPlace,
+    resident.gender,
+    resident.identityIssuedPlace,
+    resident.occupation,
+    generatedPassword,
     resident.address,
     resident.rt,
     resident.rw,
@@ -203,12 +251,16 @@ export function updateResident(id: string, updates: Partial<Resident>) {
   }
   db.prepare(`
     UPDATE residents
-    SET nik = ?, name = ?, email = ?, address = ?, rt = ?, rw = ?, phone_number = ?, status = ?, block = ?, has_voted = ?, is_present = ?
+    SET nik = ?, name = ?, email = ?, birth_place = ?, gender = ?, identity_issued_place = ?, occupation = ?, address = ?, rt = ?, rw = ?, phone_number = ?, status = ?, block = ?, has_voted = ?, is_present = ?
     WHERE id = ?
   `).run(
     next.nik,
     next.name,
     next.email,
+    next.birthPlace,
+    next.gender,
+    next.identityIssuedPlace,
+    next.occupation,
     next.address,
     next.rt,
     next.rw,
@@ -227,6 +279,89 @@ export function updateResident(id: string, updates: Partial<Resident>) {
 
 export function deleteResident(id: string) {
   db.prepare("DELETE FROM residents WHERE id = ?").run(id);
+}
+
+export function importResidents(
+  inputs: Array<
+    Pick<
+      Resident,
+      | "nik"
+      | "name"
+      | "birthPlace"
+      | "gender"
+      | "identityIssuedPlace"
+      | "occupation"
+      | "email"
+      | "address"
+      | "rt"
+      | "rw"
+      | "phoneNumber"
+      | "status"
+      | "block"
+    >
+  >,
+) {
+  const findByNikStatement = db.prepare("SELECT id FROM residents WHERE nik = ?");
+  const insertStatement = db.prepare(`
+    INSERT INTO residents (
+      id, nik, name, email, birth_place, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0
+    )
+  `);
+  const updateStatement = db.prepare(`
+    UPDATE residents
+    SET name = ?, birth_place = ?, gender = ?, identity_issued_place = ?, occupation = ?
+    WHERE nik = ?
+  `);
+
+  let created = 0;
+  let updated = 0;
+
+  const transaction = db.transaction(() => {
+    for (const input of inputs) {
+      const existing = findByNikStatement.get(input.nik) as { id?: string } | undefined;
+      if (existing?.id) {
+        updateStatement.run(
+          input.name,
+          input.birthPlace,
+          input.gender,
+          input.identityIssuedPlace,
+          input.occupation,
+          input.nik,
+        );
+        updated += 1;
+        continue;
+      }
+
+      insertStatement.run(
+        randomUUID(),
+        input.nik,
+        input.name,
+        input.email,
+        input.birthPlace,
+        input.gender,
+        input.identityIssuedPlace,
+        input.occupation,
+        generateResidentPassword(),
+        input.address,
+        input.rt,
+        input.rw,
+        input.phoneNumber,
+        input.status,
+        input.block,
+      );
+      created += 1;
+    }
+  });
+
+  transaction();
+
+  return {
+    created,
+    updated,
+    total: inputs.length,
+  };
 }
 
 export function createCandidate(input: Omit<Candidate, "id" | "voteCount">) {

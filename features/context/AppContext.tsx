@@ -3,7 +3,9 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -25,6 +27,19 @@ interface AppContextType extends BootstrapData {
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   addResident: (resident: Omit<Resident, "id" | "hasVoted" | "isPresent">) => Promise<void>;
+  importResidents: (
+    residents: Array<
+      Pick<
+        Resident,
+        | "nik"
+        | "name"
+        | "birthPlace"
+        | "gender"
+        | "identityIssuedPlace"
+        | "occupation"
+      >
+    >,
+  ) => Promise<{ created: number; updated: number; total: number }>;
   updateResident: (id: string, updates: Partial<Resident>) => Promise<void>;
   deleteResident: (id: string) => Promise<void>;
   addCandidate: (candidate: Omit<Candidate, "id" | "voteCount">) => Promise<void>;
@@ -76,18 +91,50 @@ export function AppProvider({
 }: PropsWithChildren<{ initialData: BootstrapData }>) {
   const [data, setData] = useState(initialData);
   const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const isRefreshingRef = useRef(false);
 
-  const refresh = async () => {
-    setIsBootstrapping(true);
+  const refreshData = async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (isRefreshingRef.current) {
+      return;
+    }
+
+    isRefreshingRef.current = true;
+    if (!silent) {
+      setIsBootstrapping(true);
+    }
+
     try {
       const nextData = await request<BootstrapData>("/api/bootstrap", {
         method: "GET",
+        cache: "no-store",
       });
       setData(nextData);
     } finally {
-      setIsBootstrapping(false);
+      isRefreshingRef.current = false;
+      if (!silent) {
+        setIsBootstrapping(false);
+      }
     }
   };
+
+  const refresh = async () => {
+    await refreshData();
+  };
+
+  useEffect(() => {
+    if (!data.currentUser) {
+      return;
+    }
+
+    const intervalMs = data.votingStatus === "active" ? 3000 : 10000;
+    const intervalId = window.setInterval(() => {
+      void refreshData({ silent: true });
+    }, intervalMs);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [data.currentUser, data.votingStatus]);
 
   const login = async (username: string, password: string) => {
     try {
@@ -118,6 +165,30 @@ export function AppProvider({
       body: JSON.stringify(resident),
     });
     await refresh();
+  };
+
+  const importResidents = async (
+    residents: Array<
+      Pick<
+        Resident,
+        | "nik"
+        | "name"
+        | "birthPlace"
+        | "gender"
+        | "identityIssuedPlace"
+        | "occupation"
+      >
+    >,
+  ) => {
+    const response = await request<{ created: number; updated: number; total: number }>(
+      "/api/residents/import",
+      {
+        method: "POST",
+        body: JSON.stringify({ residents }),
+      },
+    );
+    await refresh();
+    return response;
   };
 
   const updateResidentAction = async (id: string, updates: Partial<Resident>) => {
@@ -244,6 +315,7 @@ export function AppProvider({
       logout,
       refresh,
       addResident,
+      importResidents,
       updateResident: updateResidentAction,
       deleteResident: deleteResidentAction,
       addCandidate,

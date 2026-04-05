@@ -1,7 +1,6 @@
 import { badRequest, ok } from "@/lib/api";
 import { setSessionCookie } from "@/lib/auth";
 import {
-  findResidentByNik,
   findResidentSessionByCredentials,
   findUserByCredentials,
   getVotingStatus,
@@ -21,19 +20,6 @@ export async function POST(request: Request) {
   }
 
   const adminUser = findUserByCredentials(body.username, body.password);
-  const resident = adminUser ? null : findResidentByNik(body.username);
-
-  if (
-    !adminUser &&
-    resident &&
-    body.password === "password" &&
-    resident.status !== "Aktif"
-  ) {
-    return badRequest(
-      "Akses e-voting hanya tersedia untuk warga dengan status aktif.",
-      403,
-    );
-  }
 
   const sessionUser = adminUser
     ? {

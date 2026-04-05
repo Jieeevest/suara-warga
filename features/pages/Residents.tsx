@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Download, Edit2, Mail, Plus, Save, Search, Trash2, Users } from "lucide-react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import * as XLSX from "xlsx";
+import { Download, Edit2, Mail, Plus, Save, Search, Trash2, Upload, Users } from "lucide-react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import * as yup from "yup";
 import AppSelect, { type SelectOption } from "@/features/components/AppSelect";
@@ -25,6 +26,13 @@ const residentSchema = yup.object({
     .trim()
     .required("Email wajib diisi.")
     .email("Format email tidak valid."),
+  birthPlace: yup.string().trim().default(""),
+  gender: yup
+    .mixed<Resident["gender"]>()
+    .oneOf(["", "Laki-laki", "Perempuan"], "Jenis kelamin tidak valid.")
+    .default(""),
+  identityIssuedPlace: yup.string().trim().default(""),
+  occupation: yup.string().trim().default(""),
   phoneNumber: yup
     .string()
     .trim()
@@ -50,14 +58,16 @@ const inputClass = (hasError: boolean) =>
   }`;
 
 export default function Residents() {
-  const { residents, addResident, deleteResident, updateResident } = useApp();
+  const { residents, addResident, deleteResident, importResidents, updateResident, votingStatus } = useApp();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const [sendingResidentId, setSendingResidentId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Resident["status"] | "all">("all");
   const [formData, setFormData] = useState<Partial<Resident>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const closeModal = () => {
     setIsAdding(false);
@@ -86,6 +96,10 @@ export default function Residents() {
           nik: formData.nik || "",
           name: formData.name || "",
           email: formData.email || "",
+          birthPlace: formData.birthPlace || "",
+          gender: (formData.gender as Resident["gender"]) || "",
+          identityIssuedPlace: formData.identityIssuedPlace || "",
+          occupation: formData.occupation || "",
           phoneNumber: formData.phoneNumber || "",
           address: formData.address || "",
           rt: formData.rt || "",
@@ -126,6 +140,10 @@ export default function Residents() {
       nik: validated.nik,
       name: validated.name,
       email: validated.email,
+      birthPlace: validated.birthPlace,
+      gender: validated.gender,
+      identityIssuedPlace: validated.identityIssuedPlace,
+      occupation: validated.occupation,
       address: validated.address,
       rt: validated.rt,
       rw: validated.rw,
@@ -156,23 +174,32 @@ export default function Residents() {
     setFormErrors({});
   };
 
-  const buildResidentAccessText = (resident: Resident) => {
-    return [
-      "Akses Sistem E-Voting Sura Warga",
-      "",
-      `Nama: ${resident.name}`,
-      `NIK / Username: ${resident.nik}`,
-      "Password Default: password",
-      `Email: ${resident.email || "-"}`,
-      "",
-      "Silakan login menggunakan NIK sebagai username dan password default yang diberikan petugas.",
-    ].join("\n");
-  };
-
   const handleDownloadAccess = async (resident: Resident) => {
     if (resident.status !== "Aktif") {
       return;
     }
+
+    const response = await fetch(`/api/residents/${resident.id}/access`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      window.alert(payload?.error || "Gagal mengambil hak akses warga.");
+      return;
+    }
+
+    const payload = (await response.json()) as {
+      resident: {
+        name: string;
+        nik: string;
+        email: string;
+        password: string;
+      };
+    };
 
     const pdf = await PDFDocument.create();
     const page = pdf.addPage([595.28, 841.89]);
@@ -206,10 +233,10 @@ export default function Residents() {
     });
 
     const lines = [
-      { label: "Nama", value: resident.name },
-      { label: "NIK / Username", value: resident.nik },
-      { label: "Password Default", value: "password" },
-      { label: "Email", value: resident.email || "-" },
+      { label: "Nama", value: payload.resident.name },
+      { label: "NIK / Username", value: payload.resident.nik },
+      { label: "Password", value: payload.resident.password },
+      { label: "Email", value: payload.resident.email || "-" },
       { label: "RT / RW", value: `${resident.rt || "-"} / ${resident.rw || "-"}` },
       { label: "Alamat", value: resident.address || "-" },
     ];
@@ -242,7 +269,7 @@ export default function Residents() {
 
     const notes = [
       "Silakan login menggunakan NIK sebagai username.",
-      "Gunakan password default yang diberikan petugas.",
+      "Gunakan password 6 karakter yang diberikan petugas.",
       "Simpan dokumen ini dengan aman dan jangan bagikan ke pihak lain.",
     ];
 
@@ -272,7 +299,7 @@ export default function Residents() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `hak-akses-${resident.nik}.pdf`;
+    anchor.download = `hak-akses-${payload.resident.nik}.pdf`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -312,6 +339,87 @@ export default function Residents() {
       });
   };
 
+  const normalizeGender = (value: string): Resident["gender"] => {
+    const normalized = value.trim().toLowerCase();
+    if (["l", "laki-laki", "laki laki", "male", "pria"].includes(normalized)) {
+      return "Laki-laki";
+    }
+    if (["p", "perempuan", "female", "wanita"].includes(normalized)) {
+      return "Perempuan";
+    }
+    return "";
+  };
+
+  const getExcelValue = (
+    row: Record<string, unknown>,
+    keys: string[],
+  ) => {
+    for (const key of keys) {
+      if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
+        return String(row[key]).trim();
+      }
+    }
+    return "";
+  };
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      if (!sheet) {
+        throw new Error("Sheet pertama pada file Excel tidak ditemukan.");
+      }
+
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+        defval: "",
+        raw: false,
+      });
+
+      const importedResidents = rows
+        .map((row) => ({
+          name: getExcelValue(row, ["Nama"]),
+          birthPlace: getExcelValue(row, ["Tempat Lahir"]),
+          gender: normalizeGender(getExcelValue(row, ["Jenis Kelamin"])),
+          nik: getExcelValue(row, ["NIK"]),
+          identityIssuedPlace: getExcelValue(row, [
+            "Tempat di Keluarkan identitas",
+            "Tempat Dikeluarkan Identitas",
+            "Tempat dikeluarkan identitas",
+          ]),
+          occupation: getExcelValue(row, ["Pekerjaan"]),
+        }))
+        .filter((row) => row.name && row.nik);
+
+      if (importedResidents.length === 0) {
+        throw new Error(
+          "Tidak ada data yang cocok. Pastikan kolom Excel berisi Nama, Tempat Lahir, Jenis Kelamin, NIK, Tempat di Keluarkan identitas, dan Pekerjaan.",
+        );
+      }
+
+      const result = await importResidents(importedResidents);
+      window.alert(
+        `Import selesai. ${result.created} data baru ditambahkan dan ${result.updated} data diperbarui.`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Gagal mengimpor file Excel warga.";
+      window.alert(message);
+    } finally {
+      setIsImporting(false);
+      event.target.value = "";
+    }
+  };
+
   const filteredResidents = useMemo(() => {
     const term = searchTerm.toLowerCase();
 
@@ -320,6 +428,8 @@ export default function Residents() {
       const matchesSearch =
         resident.name.toLowerCase().includes(term) ||
         resident.nik.includes(searchTerm) ||
+        resident.birthPlace.toLowerCase().includes(term) ||
+        resident.occupation.toLowerCase().includes(term) ||
         resident.address.toLowerCase().includes(term) ||
         block.toLowerCase().includes(term);
       const matchesStatus = statusFilter === "all" || resident.status === statusFilter;
@@ -355,6 +465,14 @@ export default function Residents() {
     [statusOptions],
   );
 
+  const genderOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: "Laki-laki", label: "Laki-laki" },
+      { value: "Perempuan", label: "Perempuan" },
+    ],
+    [],
+  );
+
   const rtOptions = useMemo<SelectOption[]>(
     () =>
       [...Array(10)].map((_, index) => {
@@ -386,14 +504,32 @@ export default function Residents() {
               Kelola identitas warga, status domisili, dan data kontak dalam satu tabel operasional.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsAdding(true)}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            <Plus size={18} />
-            Tambah Warga
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(event) => void handleImportFile(event)}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting || votingStatus === "active"}
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Upload size={18} />
+              {isImporting ? "Mengimpor..." : "Import Excel"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAdding(true)}
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              <Plus size={18} />
+              Tambah Warga
+            </button>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -414,6 +550,15 @@ export default function Residents() {
             <p className="mt-2 text-2xl font-bold text-slate-900">{stats.deceased}</p>
           </div>
         </div>
+        {votingStatus === "active" ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Import data warga dinonaktifkan selama sesi voting aktif agar daftar pemilih tetap konsisten.
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            Password akun warga dibuat otomatis secara acak dengan panjang 6 karakter saat data dibuat atau diimpor.
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
@@ -422,6 +567,9 @@ export default function Residents() {
             <h3 className="text-lg font-semibold text-slate-900">Filter dan pencarian</h3>
             <p className="text-sm text-slate-500">
               Telusuri warga berdasarkan nama, NIK, alamat, blok, atau status.
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              Format Excel: No., Nama, Tempat Lahir, Jenis Kelamin, NIK, Tempat di Keluarkan identitas, Pekerjaan.
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row">
@@ -492,6 +640,40 @@ export default function Residents() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
+                Tempat Lahir
+              </label>
+              <input
+                className={inputClass(Boolean(formErrors.birthPlace))}
+                placeholder="Masukkan tempat lahir"
+                value={formData.birthPlace || ""}
+                onChange={(event) => setFieldValue("birthPlace", event.target.value)}
+              />
+              {formErrors.birthPlace ? (
+                <p className="mt-1 text-xs text-red-600">{formErrors.birthPlace}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Jenis Kelamin
+              </label>
+              <AppSelect
+                options={genderOptions}
+                placeholder="Pilih jenis kelamin"
+                value={
+                  genderOptions.find(
+                    (option) => option.value === ((formData.gender as string) || ""),
+                  ) || null
+                }
+                onChange={(option) =>
+                  setFieldValue("gender", (option?.value || "") as Resident["gender"])
+                }
+              />
+              {formErrors.gender ? (
+                <p className="mt-1 text-xs text-red-600">{formErrors.gender}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -519,9 +701,37 @@ export default function Residents() {
                 <p className="mt-1 text-xs text-red-600">{formErrors.phoneNumber}</p>
               ) : null}
             </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Pekerjaan
+              </label>
+              <input
+                className={inputClass(Boolean(formErrors.occupation))}
+                placeholder="Masukkan pekerjaan"
+                value={formData.occupation || ""}
+                onChange={(event) => setFieldValue("occupation", event.target.value)}
+              />
+              {formErrors.occupation ? (
+                <p className="mt-1 text-xs text-red-600">{formErrors.occupation}</p>
+              ) : null}
+            </div>
           </div>
 
           <div className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Tempat Dikeluarkan Identitas
+              </label>
+              <input
+                className={inputClass(Boolean(formErrors.identityIssuedPlace))}
+                placeholder="Masukkan lokasi penerbit identitas"
+                value={formData.identityIssuedPlace || ""}
+                onChange={(event) => setFieldValue("identityIssuedPlace", event.target.value)}
+              />
+              {formErrors.identityIssuedPlace ? (
+                <p className="mt-1 text-xs text-red-600">{formErrors.identityIssuedPlace}</p>
+              ) : null}
+            </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Alamat Domisili <span className="text-red-500">*</span>
@@ -629,6 +839,9 @@ export default function Residents() {
                   <td className="p-4">
                     <div className="text-sm font-semibold text-slate-900">{resident.name}</div>
                     <div className="text-xs text-slate-500">{resident.nik}</div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      {resident.gender || "-"} • {resident.birthPlace || "-"} • {resident.occupation || "-"}
+                    </div>
                   </td>
                   <td className="p-4 text-sm text-slate-600">{resident.email || "-"}</td>
                   <td className="p-4 text-sm text-slate-600">{resident.phoneNumber || "-"}</td>
@@ -636,6 +849,9 @@ export default function Residents() {
                     <div>{resident.address || "-"}</div>
                     <div className="mt-1 text-xs text-slate-400">
                       Blok {resident.block || "-"}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      Identitas diterbitkan di {resident.identityIssuedPlace || "-"}
                     </div>
                   </td>
                   <td className="p-4 text-center text-sm text-slate-600">

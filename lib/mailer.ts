@@ -27,6 +27,7 @@ export async function sendResidentAccessEmail(payload: {
   to: string;
   residentName: string;
   residentNik: string;
+  residentPassword: string;
 }) {
   const config = getSmtpConfig();
   const transporter = nodemailer.createTransport({
@@ -45,9 +46,9 @@ export async function sendResidentAccessEmail(payload: {
       "",
       "Berikut akses akun Anda untuk sistem E-Voting Sura Warga:",
       `Username / NIK: ${payload.residentNik}`,
-      "Password default: password",
+      `Password: ${payload.residentPassword}`,
       "",
-      "Silakan login menggunakan NIK sebagai username dan segera ganti mekanisme akses sesuai arahan panitia jika diperlukan.",
+      "Silakan login menggunakan NIK sebagai username dan password yang diberikan panitia.",
     ].join("\n"),
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
@@ -55,9 +56,9 @@ export async function sendResidentAccessEmail(payload: {
         <p>Berikut akses akun Anda untuk sistem <strong>E-Voting Sura Warga</strong>:</p>
         <ul>
           <li><strong>Username / NIK:</strong> ${payload.residentNik}</li>
-          <li><strong>Password default:</strong> password</li>
+          <li><strong>Password:</strong> ${payload.residentPassword}</li>
         </ul>
-        <p>Silakan login menggunakan NIK sebagai username dan segera ganti mekanisme akses sesuai arahan panitia jika diperlukan.</p>
+        <p>Silakan login menggunakan NIK sebagai username dan password yang diberikan panitia.</p>
       </div>
     `,
   });

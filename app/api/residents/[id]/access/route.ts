@@ -1,10 +1,9 @@
 import { badRequest, ok, requireAdmin } from "@/lib/api";
-import { sendResidentAccessEmail } from "@/lib/mailer";
 import { findResidentAccessById } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(
+export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -16,25 +15,16 @@ export async function POST(
     return badRequest("Data warga tidak ditemukan.", 404);
   }
 
-  if (!resident.email) {
-    return badRequest("Email warga belum tersedia.");
-  }
   if (resident.status !== "Aktif") {
     return badRequest("Hak akses hanya dapat diberikan kepada warga dengan status aktif.");
   }
 
-  try {
-    await sendResidentAccessEmail({
-      to: resident.email,
-      residentName: resident.name,
-      residentNik: resident.nik,
-      residentPassword: resident.password,
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Gagal mengirim email akses.";
-    return badRequest(message, 500);
-  }
-
-  return ok({ success: true });
+  return ok({
+    resident: {
+      name: resident.name,
+      nik: resident.nik,
+      email: resident.email,
+      password: resident.password,
+    },
+  });
 }

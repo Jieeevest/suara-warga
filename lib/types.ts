@@ -3,6 +3,10 @@ export interface Resident {
   nik: string;
   name: string;
   email: string;
+  birthPlace: string;
+  gender: "Laki-laki" | "Perempuan" | "";
+  identityIssuedPlace: string;
+  occupation: string;
   address: string;
   rt: string;
   rw: string;

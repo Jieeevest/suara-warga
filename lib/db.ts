@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { randomInt } from "node:crypto";
 import Database from "better-sqlite3";
 import { INITIAL_CANDIDATES, INITIAL_RESIDENTS, getInitialUsers } from "./seed";
 
@@ -9,6 +10,13 @@ const dbPath = path.join(dataDir, "sura-warga.sqlite");
 declare global {
   // eslint-disable-next-line no-var
   var __suraWargaDb: Database.Database | undefined;
+}
+
+function generateResidentPassword(length = 6) {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  return Array.from({ length }, () =>
+    characters[randomInt(0, characters.length)],
+  ).join("");
 }
 
 function ensureDatabase() {
@@ -29,6 +37,11 @@ function ensureDatabase() {
       nik TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       email TEXT NOT NULL DEFAULT '',
+      birth_place TEXT NOT NULL DEFAULT '',
+      gender TEXT NOT NULL DEFAULT '',
+      identity_issued_place TEXT NOT NULL DEFAULT '',
+      occupation TEXT NOT NULL DEFAULT '',
+      password TEXT NOT NULL DEFAULT '',
       address TEXT NOT NULL,
       rt TEXT NOT NULL,
       rw TEXT NOT NULL,
@@ -70,6 +83,34 @@ function ensureDatabase() {
   if (!hasEmailColumn) {
     db.exec("ALTER TABLE residents ADD COLUMN email TEXT NOT NULL DEFAULT ''");
   }
+  const residentColumnStatements = [
+    {
+      key: "birth_place",
+      statement: "ALTER TABLE residents ADD COLUMN birth_place TEXT NOT NULL DEFAULT ''",
+    },
+    {
+      key: "gender",
+      statement: "ALTER TABLE residents ADD COLUMN gender TEXT NOT NULL DEFAULT ''",
+    },
+    {
+      key: "identity_issued_place",
+      statement:
+        "ALTER TABLE residents ADD COLUMN identity_issued_place TEXT NOT NULL DEFAULT ''",
+    },
+    {
+      key: "occupation",
+      statement: "ALTER TABLE residents ADD COLUMN occupation TEXT NOT NULL DEFAULT ''",
+    },
+    {
+      key: "password",
+      statement: "ALTER TABLE residents ADD COLUMN password TEXT NOT NULL DEFAULT ''",
+    },
+  ];
+  for (const column of residentColumnStatements) {
+    if (!residentColumns.some((residentColumn) => residentColumn.name === column.key)) {
+      db.exec(column.statement);
+    }
+  }
 
   const residentCountRow = db.prepare("SELECT COUNT(*) as count FROM residents").get() as {
     count?: number;
@@ -78,9 +119,9 @@ function ensureDatabase() {
   if (residentCount === 0) {
     const insert = db.prepare(`
       INSERT INTO residents (
-        id, nik, name, email, address, rt, rw, phone_number, status, block, has_voted, is_present
+        id, nik, name, email, birth_place, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `);
 
@@ -90,6 +131,11 @@ function ensureDatabase() {
         resident.nik,
         resident.name,
         resident.email,
+        resident.birthPlace,
+        resident.gender,
+        resident.identityIssuedPlace,
+        resident.occupation,
+        "",
         resident.address,
         resident.rt,
         resident.rw,
@@ -105,8 +151,37 @@ function ensureDatabase() {
   const backfillResidentEmail = db.prepare(
     "UPDATE residents SET email = ? WHERE id = ? AND COALESCE(email, '') = ''",
   );
+  const backfillResidentBirthPlace = db.prepare(
+    "UPDATE residents SET birth_place = ? WHERE id = ? AND COALESCE(birth_place, '') = ''",
+  );
+  const backfillResidentGender = db.prepare(
+    "UPDATE residents SET gender = ? WHERE id = ? AND COALESCE(gender, '') = ''",
+  );
+  const backfillResidentIdentityIssuedPlace = db.prepare(
+    "UPDATE residents SET identity_issued_place = ? WHERE id = ? AND COALESCE(identity_issued_place, '') = ''",
+  );
+  const backfillResidentOccupation = db.prepare(
+    "UPDATE residents SET occupation = ? WHERE id = ? AND COALESCE(occupation, '') = ''",
+  );
+  const backfillResidentPassword = db.prepare(
+    "UPDATE residents SET password = ? WHERE id = ? AND COALESCE(password, '') = ''",
+  );
   for (const resident of INITIAL_RESIDENTS) {
     backfillResidentEmail.run(resident.email, resident.id);
+    backfillResidentBirthPlace.run(resident.birthPlace, resident.id);
+    backfillResidentGender.run(resident.gender, resident.id);
+    backfillResidentIdentityIssuedPlace.run(resident.identityIssuedPlace, resident.id);
+    backfillResidentOccupation.run(resident.occupation, resident.id);
+    backfillResidentPassword.run(generateResidentPassword(), resident.id);
+  }
+
+  const residentsWithoutPassword = db.prepare(
+    "SELECT id FROM residents WHERE COALESCE(password, '') = ''",
+  ).all() as Array<{ id?: string }>;
+  for (const resident of residentsWithoutPassword) {
+    if (resident.id) {
+      backfillResidentPassword.run(generateResidentPassword(), resident.id);
+    }
   }
 
   const candidateCountRow = db.prepare("SELECT COUNT(*) as count FROM candidates").get() as {
