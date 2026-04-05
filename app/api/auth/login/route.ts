@@ -5,6 +5,7 @@ import {
   findResidentSessionByCredentials,
   findUserByCredentials,
   getVotingStatus,
+  markResidentPresent,
 } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,10 @@ export async function POST(request: Request) {
 
   if (sessionUser.role === "resident" && getVotingStatus() !== "active") {
     return badRequest("Akses warga hanya dapat digunakan saat acara voting sedang aktif.", 403);
+  }
+
+  if (sessionUser.role === "resident") {
+    markResidentPresent(sessionUser.id);
   }
 
   await setSessionCookie(sessionUser);

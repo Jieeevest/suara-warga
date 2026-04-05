@@ -7,8 +7,7 @@ import { useApp } from "@/features/context/AppContext";
 
 export default function ResidentVoting() {
   const router = useRouter();
-  const { candidates, castVote, currentUser, votingStatus, logout, residents, activeVoterId } =
-    useApp();
+  const { candidates, castVote, currentUser, votingStatus, logout, residents } = useApp();
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -105,23 +104,6 @@ export default function ResidentVoting() {
           >
             Keluar
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (activeVoterId && activeVoterId !== currentUser?.id) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center animate-fade-in">
-        <div className="w-full max-w-md rounded-2xl border border-gray-300 bg-white p-8 shadow-xl">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-orange-100">
-            <AlertCircle size={40} className="text-orange-600" />
-          </div>
-          <h2 className="mb-2 text-2xl font-bold text-gray-800">Menunggu Akses Bilik</h2>
-          <p className="text-gray-600">
-            Petugas belum membuka akses bilik suara untuk akun Anda. Silakan tunggu
-            konfirmasi dari meja registrasi.
-          </p>
         </div>
       </div>
     );

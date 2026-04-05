@@ -44,6 +44,25 @@ AUTH_SECRET=ganti_dengan_secret_yang_aman
 npm run dev
 ```
 
+## Update cepat di laptop lain
+
+Kalau repo sudah pernah di-clone dan ingin menarik update terbaru lalu mengosongkan data demo:
+
+```bash
+git pull origin main
+npm run refresh:demo
+npm run dev
+```
+
+Kalau hanya ingin reset database lokal ke kondisi demo bersih tanpa install ulang dependency:
+
+```bash
+npm run reset:demo
+npm run dev
+```
+
+Script `reset:demo` akan menghapus file SQLite lokal di folder `data/`, lalu database akan dibuat ulang otomatis dari seed kosong saat aplikasi dijalankan lagi.
+
 ## Email akses warga via Gmail SMTP
 
 Fitur `Send Access via Email` pada manajemen data warga mengirim email dari server menggunakan SMTP.

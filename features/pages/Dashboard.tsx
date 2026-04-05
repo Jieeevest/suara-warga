@@ -31,7 +31,7 @@ import {
 import { useApp } from "@/features/context/AppContext";
 
 export default function Dashboard() {
-  const { residents, candidates, votingStatus, setVotingStatus, activeVoterId } = useApp();
+  const { residents, candidates, votingStatus, setVotingStatus } = useApp();
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export default function Dashboard() {
     if (stats.presentButNotVoted.length > 0) {
       items.push({
         title: `${stats.presentButNotVoted.length} warga hadir belum memilih`,
-        description: "Arahkan petugas ke meja registrasi atau aktifkan akses bilik berikutnya.",
+        description: "Arahkan petugas ke meja registrasi atau minta warga melanjutkan proses memilih.",
         tone: "amber",
       });
     }
@@ -202,7 +202,7 @@ export default function Dashboard() {
       {
         label: "Meja Registrasi",
         href: "/attendance" as Route,
-        helper: "Kelola kehadiran dan buka akses bilik suara.",
+        helper: "Kelola kehadiran dan pantau warga yang belum memilih.",
       },
       {
         label: "Pantau Data Warga",
@@ -268,7 +268,7 @@ export default function Dashboard() {
         </div>
         <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm text-slate-600 shadow-sm ring-1 ring-gray-300">
           <Clock3 size={16} />
-          {activeVoterId ? "Bilik suara sedang aktif" : "Belum ada bilik aktif"}
+          {votingStatus === "active" ? "Sesi voting sedang aktif" : "Sesi voting belum aktif"}
         </div>
       </div>
 

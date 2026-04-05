@@ -116,6 +116,19 @@ export function findResidentSessionByCredentials(
   } satisfies SessionUser;
 }
 
+export function markResidentPresent(residentId: string) {
+  const resident = findResidentById(residentId);
+  if (!resident) {
+    throw new Error("Resident not found");
+  }
+  if (resident.status !== "Aktif") {
+    throw new Error("Hanya warga aktif yang dapat diverifikasi kehadirannya.");
+  }
+  if (!resident.isPresent) {
+    updateResident(residentId, { isPresent: true });
+  }
+}
+
 export function getSessionUserById(role: string, id: string) {
   if (role === "resident") {
     const resident = findResidentById(id);

@@ -12,8 +12,8 @@ export const INITIAL_RESIDENTS: Resident[] = [
     phoneNumber: "081234567890",
     status: "Aktif",
     block: "A",
-    hasVoted: true,
-    isPresent: true,
+    hasVoted: false,
+    isPresent: false,
   },
   {
     id: "2",
@@ -40,8 +40,8 @@ export const INITIAL_RESIDENTS: Resident[] = [
     phoneNumber: "081234567892",
     status: "Aktif",
     block: "B",
-    hasVoted: true,
-    isPresent: true,
+    hasVoted: false,
+    isPresent: false,
   },
   {
     id: "4",
@@ -55,7 +55,7 @@ export const INITIAL_RESIDENTS: Resident[] = [
     status: "Pindah",
     block: "B",
     hasVoted: false,
-    isPresent: true,
+    isPresent: false,
   },
   {
     id: "5",
@@ -68,8 +68,8 @@ export const INITIAL_RESIDENTS: Resident[] = [
     phoneNumber: "081234567894",
     status: "Aktif",
     block: "C",
-    hasVoted: true,
-    isPresent: true,
+    hasVoted: false,
+    isPresent: false,
   },
   {
     id: "6",
@@ -96,8 +96,8 @@ export const INITIAL_RESIDENTS: Resident[] = [
     phoneNumber: "081234567896",
     status: "Aktif",
     block: "D",
-    hasVoted: true,
-    isPresent: true,
+    hasVoted: false,
+    isPresent: false,
   },
   {
     id: "8",
@@ -124,8 +124,8 @@ export const INITIAL_RESIDENTS: Resident[] = [
     phoneNumber: "081234567898",
     status: "Aktif",
     block: "E",
-    hasVoted: true,
-    isPresent: true,
+    hasVoted: false,
+    isPresent: false,
   },
   {
     id: "10",
@@ -139,7 +139,7 @@ export const INITIAL_RESIDENTS: Resident[] = [
     status: "Meninggal",
     block: "E",
     hasVoted: false,
-    isPresent: true,
+    isPresent: false,
   },
 ];
 
@@ -151,7 +151,7 @@ export const INITIAL_CANDIDATES: Candidate[] = [
     vision: "Mewujudkan lingkungan RW 05 yang aman, bersih, dan religius.",
     mission: "1. Mengaktifkan Siskamling.\n2. Program Jumat Bersih.",
     imageUrl: "https://i.pravatar.cc/300?u=ahmad",
-    voteCount: 18,
+    voteCount: 0,
   },
   {
     id: "c2",
@@ -160,7 +160,7 @@ export const INITIAL_CANDIDATES: Candidate[] = [
     vision: "RW 05 Digital dan Transparan.",
     mission: "1. Laporan keuangan online.\n2. WiFi gratis di pos ronda.",
     imageUrl: "https://i.pravatar.cc/300?u=joko",
-    voteCount: 14,
+    voteCount: 0,
   },
   {
     id: "c3",
@@ -169,7 +169,7 @@ export const INITIAL_CANDIDATES: Candidate[] = [
     vision: "Pemberdayaan Keluarga dan Kesehatan Lingkungan.",
     mission: "1. Optimalisasi Posyandu.\n2. Bank Sampah Mandiri.",
     imageUrl: "https://i.pravatar.cc/300?u=linda",
-    voteCount: 10,
+    voteCount: 0,
   },
 ];
 
