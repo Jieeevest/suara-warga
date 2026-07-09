@@ -504,6 +504,10 @@ export function toggleAttendance(residentId: string) {
 }
 
 export function castVote(candidateId: string, residentId: string) {
+  if (getVotingStatus() !== "active") {
+    throw new Error("Vote hanya dapat dilakukan saat voting sedang aktif.");
+  }
+
   const resident = findResidentById(residentId);
   if (!resident) {
     throw new Error("Resident not found");
@@ -513,6 +517,12 @@ export function castVote(candidateId: string, residentId: string) {
   }
   if (resident.hasVoted) {
     throw new Error("Resident already voted");
+  }
+  if (!resident.isPresent) {
+    throw new Error("Warga harus ditandai hadir sebelum dapat memilih.");
+  }
+  if (getActiveVoterId() !== residentId) {
+    throw new Error("Bilik suara belum dibuka untuk warga ini.");
   }
 
   const candidate = db.prepare("SELECT * FROM candidates WHERE id = ?").get(candidateId);

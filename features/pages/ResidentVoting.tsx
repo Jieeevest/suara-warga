@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, LogOut } from "lucide-react";
 import { useApp } from "@/features/context/AppContext";
+import { useToast } from "@/features/components/ToastProvider";
 
 export default function ResidentVoting() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { candidates, castVote, currentUser, votingStatus, logout, residents } = useApp();
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -21,9 +23,15 @@ export default function ResidentVoting() {
       return;
     }
 
-    await castVote(selectedCandidateId);
-    setIsConfirming(false);
-    setIsSuccess(true);
+    try {
+      await castVote(selectedCandidateId);
+      setIsConfirming(false);
+      setIsSuccess(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal merekam suara.";
+      setIsConfirming(false);
+      showToast({ title: "Gagal memilih", description: message, tone: "error" });
+    }
   };
 
   if (isSuccess || residentData?.hasVoted) {

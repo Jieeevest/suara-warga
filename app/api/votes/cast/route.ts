@@ -5,7 +5,11 @@ import { decryptEncryptedVote } from "@/lib/vote-crypto";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const user = await requireUser();
+  const user = await requireUser().catch(() => null);
+  if (!user) {
+    return badRequest("Sesi tidak valid atau voting sedang tidak aktif.", 401);
+  }
+
   const body = (await request.json()) as { encryptedVote?: string };
 
   if (user.role !== "resident") {
