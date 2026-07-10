@@ -32,14 +32,17 @@ export default function Login({ onForgotPassword }: LoginProps) {
     setIsLoading(true);
     setError("");
 
-    const user = await login(username, password);
-    if (!user) {
-      setError("Username atau Password salah. Silakan coba lagi.");
+    try {
+      const user = await login(username, password);
+      router.replace(user.role === "resident" ? "/" : "/dashboard");
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error
+          ? submitError.message
+          : "Username atau Password salah. Silakan coba lagi.";
+      setError(message);
       setIsLoading(false);
-      return;
     }
-
-    router.replace(user.role === "resident" ? "/" : "/dashboard");
   };
 
   return (

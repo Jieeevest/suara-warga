@@ -23,7 +23,7 @@ interface AppContextType extends BootstrapData {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isBootstrapping: boolean;
-  login: (username: string, password: string) => Promise<SessionUser | null>;
+  login: (username: string, password: string) => Promise<SessionUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   addResident: (resident: Omit<Resident, "id" | "hasVoted" | "isPresent">) => Promise<void>;
@@ -141,16 +141,12 @@ export function AppProvider({
   }, [data.currentUser, data.votingStatus]);
 
   const login = async (username: string, password: string) => {
-    try {
-      const response = await request<{ success: boolean; user: SessionUser }>("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
-      });
-      await refresh();
-      return response.user;
-    } catch {
-      return null;
-    }
+    const response = await request<{ success: boolean; user: SessionUser }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+    await refresh();
+    return response.user;
   };
 
   const logout = async () => {
