@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { db } from "./db";
+import { emitVoteCast } from "./events";
 import type {
   Candidate,
   Resident,
   SessionUser,
   User,
+  VotingSessionRecord,
   VotingStatus,
 } from "./types";
 
@@ -45,6 +47,20 @@ function mapCandidate(row: Record<string, unknown>): Candidate {
     mission: String(row.mission),
     imageUrl: String(row.image_url),
     voteCount: Number(row.vote_count),
+  };
+}
+
+function mapVotingSession(row: Record<string, unknown>): VotingSessionRecord {
+  return {
+    id: String(row.id),
+    agenda: String(row.agenda),
+    scheduledAt: String(row.scheduled_at),
+    startedAt: String(row.started_at),
+    closedAt: row.closed_at ? String(row.closed_at) : null,
+    totalVoters: Number(row.total_voters),
+    totalVotes: Number(row.total_votes),
+    turnoutPercentage: Number(row.turnout_percentage),
+    results: JSON.parse(String(row.results_json || "[]")),
   };
 }
 
@@ -535,6 +551,7 @@ export function castVote(candidateId: string, residentId: string) {
   );
   updateResident(residentId, { hasVoted: true });
   setActiveVoter(null);
+  emitVoteCast({ residentName: resident.name, castAt: new Date().toISOString() });
 }
 
 export function resetVotingSession() {
@@ -542,4 +559,64 @@ export function resetVotingSession() {
   db.prepare("UPDATE candidates SET vote_count = 0").run();
   setVotingStatus("not_started");
   setActiveVoter(null);
+}
+
+export function startVotingSession({
+  agenda,
+  scheduledAt,
+}: {
+  agenda: string;
+  scheduledAt: string;
+}) {
+  if (getVotingStatus() !== "not_started") {
+    throw new Error("Sesi hanya dapat dimulai dari status belum dimulai.");
+  }
+  if (!agenda.trim()) {
+    throw new Error("Agenda sesi wajib diisi.");
+  }
+  if (!scheduledAt.trim()) {
+    throw new Error("Jadwal pelaksanaan wajib diisi.");
+  }
+
+  db.prepare(`
+    INSERT INTO voting_sessions (id, agenda, scheduled_at, started_at, closed_at)
+    VALUES (?, ?, ?, ?, NULL)
+  `).run(randomUUID(), agenda.trim(), scheduledAt, new Date().toISOString());
+
+  setVotingStatus("active");
+}
+
+export function closeVotingSession() {
+  const candidates = listCandidates();
+  const activeResidents = listResidents().filter((resident) => resident.status === "Aktif");
+  const totalVoters = activeResidents.length;
+  const totalVotes = candidates.reduce((sum, candidate) => sum + candidate.voteCount, 0);
+  const turnoutPercentage = totalVoters > 0 ? (totalVotes / totalVoters) * 100 : 0;
+  const results = candidates.map((candidate) => ({
+    id: candidate.id,
+    number: candidate.number,
+    name: candidate.name,
+    voteCount: candidate.voteCount,
+  }));
+
+  db.prepare(`
+    UPDATE voting_sessions
+    SET closed_at = ?, total_voters = ?, total_votes = ?, turnout_percentage = ?, results_json = ?
+    WHERE closed_at IS NULL
+  `).run(
+    new Date().toISOString(),
+    totalVoters,
+    totalVotes,
+    turnoutPercentage,
+    JSON.stringify(results),
+  );
+
+  setVotingStatus("closed");
+}
+
+export function listVotingSessions(): VotingSessionRecord[] {
+  return db
+    .prepare("SELECT * FROM voting_sessions ORDER BY started_at DESC")
+    .all()
+    .map((row) => mapVotingSession(row as Record<string, unknown>));
 }

@@ -2,7 +2,22 @@
 
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import * as XLSX from "xlsx";
-import { Download, Edit2, Mail, Plus, Save, Search, Trash2, Upload, Users } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Download,
+  Edit2,
+  Mail,
+  MessageCircle,
+  Plus,
+  X,
+  Save,
+  Search,
+  Trash2,
+  Upload,
+  UserCheck,
+  Users,
+  UserX,
+} from "lucide-react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import * as yup from "yup";
 import AppSelect, { type SelectOption } from "@/features/components/AppSelect";
@@ -353,6 +368,60 @@ export default function Residents() {
       });
   };
 
+  const normalizeWhatsappNumber = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("0")) {
+      return `62${digits.slice(1)}`;
+    }
+    if (digits.startsWith("62")) {
+      return digits;
+    }
+    return `62${digits}`;
+  };
+
+  const handleSendAccessWhatsapp = async (resident: Resident) => {
+    if (resident.status !== "Aktif" || !resident.phoneNumber || sendingResidentId) {
+      return;
+    }
+
+    setSendingResidentId(resident.id);
+    try {
+      const response = await fetch(`/api/residents/${resident.id}/access`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error || "Hak akses warga tidak dapat dimuat.");
+      }
+
+      const payload = (await response.json()) as {
+        resident: { name: string; nik: string; password: string };
+      };
+
+      const message = [
+        `Halo ${payload.resident.name},`,
+        "",
+        "Berikut akses akun Anda untuk sistem E-Voting Sura Warga:",
+        `Username / NIK: ${payload.resident.nik}`,
+        `Password: ${payload.resident.password}`,
+        "",
+        "Silakan login menggunakan NIK sebagai username dan password di atas.",
+      ].join("\n");
+
+      const phone = normalizeWhatsappNumber(resident.phoneNumber);
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal membuka WhatsApp.";
+      showToast({ title: "Gagal membuka WhatsApp", description: message, tone: "error" });
+    } finally {
+      setSendingResidentId(null);
+    }
+  };
+
   const normalizeGender = (value: string): Resident["gender"] => {
     const normalized = value.trim().toLowerCase();
     if (["l", "laki-laki", "laki laki", "male", "pria"].includes(normalized)) {
@@ -553,21 +622,41 @@ export default function Residents() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Total Warga</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.total}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-slate-50 p-4">
+            <div className="rounded-lg bg-slate-200 p-2.5 text-slate-700">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Total Warga</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-emerald-50 p-4">
-            <p className="text-sm text-slate-500">Status Aktif</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.active}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-emerald-50 p-4">
+            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-600">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Status Aktif</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.active}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-amber-50 p-4">
-            <p className="text-sm text-slate-500">Pindah</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.moved}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-amber-50 p-4">
+            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-600">
+              <ArrowRightLeft size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Pindah</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.moved}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-rose-50 p-4">
-            <p className="text-sm text-slate-500">Meninggal</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.deceased}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-rose-50 p-4">
+            <div className="rounded-lg bg-rose-100 p-2.5 text-rose-600">
+              <UserX size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Meninggal</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.deceased}</p>
+            </div>
           </div>
         </div>
         {votingStatus === "active" ? (
@@ -818,8 +907,9 @@ export default function Residents() {
           <button
             type="button"
             onClick={closeModal}
-            className="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
+            <X size={16} />
             Batal
           </button>
           <button
@@ -915,6 +1005,19 @@ export default function Residents() {
                       title="Send access via email"
                     >
                       <Mail size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleSendAccessWhatsapp(resident)}
+                      disabled={
+                        resident.status !== "Aktif" ||
+                        !resident.phoneNumber ||
+                        sendingResidentId === resident.id
+                      }
+                      className="cursor-pointer rounded-lg p-2 text-green-600 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      title="Send access via WhatsApp"
+                    >
+                      <MessageCircle size={16} />
                     </button>
                     <button
                       type="button"

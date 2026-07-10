@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Edit2, Eye, EyeOff, Plus, Save, Shield, Trash2, Users } from "lucide-react";
+import { Edit2, Eye, EyeOff, Plus, Save, Shield, Trash2, UserCheck, Users, X } from "lucide-react";
 import * as yup from "yup";
 import AppSelect, { type SelectOption } from "@/features/components/AppSelect";
 import Modal from "@/features/components/Modal";
@@ -243,17 +243,32 @@ export default function AccessControl() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Total Akun</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.total}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-slate-50 p-4">
+            <div className="rounded-lg bg-slate-200 p-2.5 text-slate-700">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Total Akun</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-blue-50 p-4">
-            <p className="text-sm text-slate-500">Administrator</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.admins}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-blue-50 p-4">
+            <div className="rounded-lg bg-blue-100 p-2.5 text-blue-600">
+              <Shield size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Administrator</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.admins}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Akun Warga</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.residents}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-emerald-50 p-4">
+            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-600">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Akun Warga</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.residents}</p>
+            </div>
           </div>
         </div>
 
@@ -384,8 +399,9 @@ export default function AccessControl() {
           <button
             type="button"
             onClick={closeModal}
-            className="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
+            <X size={16} />
             Batal
           </button>
           <button

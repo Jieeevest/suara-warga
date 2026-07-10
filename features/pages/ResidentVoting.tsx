@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, LogOut } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, LogOut, Vote, X } from "lucide-react";
 import { useApp } from "@/features/context/AppContext";
 import { useToast } from "@/features/components/ToastProvider";
 
@@ -36,10 +36,10 @@ export default function ResidentVoting() {
 
   if (isSuccess || residentData?.hasVoted) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center animate-fade-in">
-        <div className="w-full max-w-md rounded-2xl border border-gray-300 bg-white p-8 shadow-xl">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 size={48} className="text-green-600" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-emerald-50 p-6 text-center animate-fade-in">
+        <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-8 shadow-xl animate-scale-in">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30">
+            <CheckCircle2 size={48} className="text-white" />
           </div>
           <h2 className="mb-2 text-3xl font-bold text-gray-800">Terima Kasih</h2>
           <p className="mb-8 text-gray-600">
@@ -53,9 +53,9 @@ export default function ResidentVoting() {
                 router.replace("/");
               });
             }}
-            className="w-full rounded-xl bg-gray-900 px-6 py-3 font-medium text-white shadow-lg transition hover:bg-gray-800"
-            
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gray-900 px-6 py-3 font-medium text-white shadow-lg transition hover:bg-gray-800"
           >
+            <LogOut size={18} />
             Keluar Aplikasi
           </button>
         </div>
@@ -65,10 +65,10 @@ export default function ResidentVoting() {
 
   if (votingStatus === "not_started") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center animate-fade-in">
-        <div className="w-full max-w-md rounded-2xl border border-gray-300 bg-white p-8 shadow-xl">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-yellow-100">
-            <AlertCircle size={40} className="text-yellow-600" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-amber-50 p-6 text-center animate-fade-in">
+        <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-8 shadow-xl animate-scale-in">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/30">
+            <AlertCircle size={40} className="text-white" />
           </div>
           <h2 className="mb-2 text-2xl font-bold text-gray-800">Belum Dimulai</h2>
           <p className="mb-8 text-gray-600">
@@ -81,8 +81,9 @@ export default function ResidentVoting() {
                 router.replace("/");
               });
             }}
-            className="w-full cursor-pointer rounded-xl border border-gray-300 px-6 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
           >
+            <LogOut size={18} />
             Keluar
           </button>
         </div>
@@ -92,10 +93,10 @@ export default function ResidentVoting() {
 
   if (votingStatus === "closed") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center animate-fade-in">
-        <div className="w-full max-w-md rounded-2xl border border-gray-300 bg-white p-8 shadow-xl">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-            <LogOut size={40} className="text-gray-500" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-6 text-center animate-fade-in">
+        <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-8 shadow-xl animate-scale-in">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-lg shadow-slate-500/30">
+            <LogOut size={40} className="text-white" />
           </div>
           <h2 className="mb-2 text-2xl font-bold text-gray-800">Pemilihan Selesai</h2>
           <p className="mb-8 text-gray-600">
@@ -108,8 +109,9 @@ export default function ResidentVoting() {
                 router.replace("/");
               });
             }}
-            className="w-full cursor-pointer rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
           >
+            <LogOut size={18} />
             Keluar
           </button>
         </div>
@@ -118,14 +120,19 @@ export default function ResidentVoting() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="sticky top-0 z-20 bg-white shadow-sm">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 pb-24">
+      <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">E-Voting RW 05</h1>
-            <p className="text-sm text-gray-500">
-              Halo, <span className="font-semibold">{currentUser?.name}</span>
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+              <Vote size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">E-Voting RW 05</h1>
+              <p className="text-sm text-gray-500">
+                Halo, <span className="font-semibold">{currentUser?.name}</span>
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -201,6 +208,7 @@ export default function ResidentVoting() {
             onClick={() => setIsConfirming(true)}
             className="flex w-full max-w-md cursor-pointer items-center justify-center space-x-2 rounded-full bg-blue-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition-all hover:bg-blue-700"
           >
+            <Vote size={20} />
             <span>
               Pilih Kandidat No.{" "}
               {candidates.find((candidate) => candidate.id === selectedCandidateId)?.number}
@@ -211,7 +219,7 @@ export default function ResidentVoting() {
 
       {isConfirming && selectedCandidateId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
+          <div className="w-full max-w-xs rounded-3xl bg-white p-6 text-center shadow-2xl animate-scale-in">
             <h3 className="mb-2 text-xl font-bold text-gray-800">Konfirmasi</h3>
             <p className="mb-6 text-sm text-gray-500">
               Anda yakin memilih kandidat ini? Pilihan tidak dapat diubah.
@@ -220,15 +228,17 @@ export default function ResidentVoting() {
               <button
                 type="button"
                 onClick={() => setIsConfirming(false)}
-                className="flex-1 cursor-pointer rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
               >
+                <X size={16} />
                 Batal
               </button>
               <button
                 type="button"
                 onClick={() => void handleVoteConfirm()}
-                className="flex-1 cursor-pointer rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700"
+                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700"
               >
+                <Check size={16} />
                 Yakin
               </button>
             </div>

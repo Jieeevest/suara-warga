@@ -54,6 +54,18 @@ export interface SessionUser {
 
 export type VotingStatus = "not_started" | "active" | "closed";
 
+export interface VotingSessionRecord {
+  id: string;
+  agenda: string;
+  scheduledAt: string;
+  startedAt: string;
+  closedAt: string | null;
+  totalVoters: number;
+  totalVotes: number;
+  turnoutPercentage: number;
+  results: Array<{ id: string; number: number; name: string; voteCount: number }>;
+}
+
 export interface BootstrapData {
   residents: Resident[];
   candidates: Candidate[];

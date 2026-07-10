@@ -8,6 +8,7 @@ import {
   Plus,
   Save,
   Trash2,
+  X,
   Trophy,
   Users,
   Vote,
@@ -218,19 +219,34 @@ export default function Candidates() {
         ) : null}
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">Total Kandidat</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{candidates.length}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-slate-50 p-4">
+            <div className="rounded-lg bg-slate-200 p-2.5 text-slate-700">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Total Kandidat</p>
+              <p className="text-2xl font-bold text-slate-900">{candidates.length}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-emerald-50 p-4">
-            <p className="text-sm text-slate-500">Total Suara Tercatat</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{totalVotes}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-emerald-50 p-4">
+            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-600">
+              <Vote size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Total Suara Tercatat</p>
+              <p className="text-2xl font-bold text-slate-900">{totalVotes}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-amber-50 p-4">
-            <p className="text-sm text-slate-500">Kandidat Terdepan</p>
-            <p className="mt-2 text-lg font-bold text-slate-900">
-              {rankedCandidates[0]?.name || "Belum ada data"}
-            </p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-amber-50 p-4">
+            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-600">
+              <Trophy size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Kandidat Terdepan</p>
+              <p className="text-lg font-bold text-slate-900">
+                {rankedCandidates[0]?.name || "Belum ada data"}
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -336,8 +352,9 @@ export default function Candidates() {
           <button
             type="button"
             onClick={closeModal}
-            className="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
+            <X size={16} />
             Batal
           </button>
           <button
@@ -405,8 +422,9 @@ export default function Candidates() {
                   setDeletingId(null);
                 });
               }}
-              className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700"
             >
+              <Trash2 size={16} />
               Ya, Hapus Kandidat
             </button>
           </div>

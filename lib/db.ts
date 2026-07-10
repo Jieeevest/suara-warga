@@ -74,6 +74,18 @@ function ensureDatabase() {
       key TEXT PRIMARY KEY,
       value TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS voting_sessions (
+      id TEXT PRIMARY KEY,
+      agenda TEXT NOT NULL,
+      scheduled_at TEXT NOT NULL,
+      started_at TEXT NOT NULL,
+      closed_at TEXT,
+      total_voters INTEGER NOT NULL DEFAULT 0,
+      total_votes INTEGER NOT NULL DEFAULT 0,
+      turnout_percentage REAL NOT NULL DEFAULT 0,
+      results_json TEXT NOT NULL DEFAULT '[]'
+    );
   `);
 
   const residentColumns = db.prepare("PRAGMA table_info(residents)").all() as Array<{

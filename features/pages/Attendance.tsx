@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, UserCheck, Users } from "lucide-react";
+import { Clock3, Search, UserCheck, Users, Vote } from "lucide-react";
 import { useApp } from "@/features/context/AppContext";
 
 export default function Attendance() {
@@ -63,21 +63,41 @@ export default function Attendance() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">DPT Aktif</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.total}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-slate-50 p-4">
+            <div className="rounded-lg bg-slate-200 p-2.5 text-slate-700">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">DPT Aktif</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-emerald-50 p-4">
-            <p className="text-sm text-slate-500">Sudah Terverifikasi</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.present}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-emerald-50 p-4">
+            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-600">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Sudah Terverifikasi</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.present}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-amber-50 p-4">
-            <p className="text-sm text-slate-500">Menunggu Memilih</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.waiting}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-amber-50 p-4">
+            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-600">
+              <Clock3 size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Menunggu Memilih</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.waiting}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-300 bg-blue-50 p-4">
-            <p className="text-sm text-slate-500">Sudah Memilih</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{stats.voted}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-blue-50 p-4">
+            <div className="rounded-lg bg-blue-100 p-2.5 text-blue-600">
+              <Vote size={20} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Sudah Memilih</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.voted}</p>
+            </div>
           </div>
         </div>
       </section>

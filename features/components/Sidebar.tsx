@@ -20,6 +20,7 @@ interface SidebarProps {
 export default function Sidebar({ activePage }: SidebarProps) {
   const { logout, currentUser, isBootstrapping } = useApp();
   const router = useRouter();
+
   const menuItems = [
     { id: "dashboard", href: "/dashboard" as Route, label: "Dashboard", icon: LayoutDashboard },
     { id: "voting", href: "/voting" as Route, label: "E-Voting", icon: Vote },
@@ -54,20 +55,26 @@ export default function Sidebar({ activePage }: SidebarProps) {
             <Link
               key={item.id}
               href={item.href}
-              className={`flex w-full cursor-pointer items-center space-x-3 rounded-lg px-4 py-3 transition-all duration-200 ${
+              className={`flex w-full cursor-pointer items-center space-x-3 rounded-lg px-3 py-2.5 transition-all duration-200 ${
                 isActive
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
                   : "text-slate-600 hover:bg-slate-50 hover:text-blue-600"
               }`}
             >
-              <Icon size={20} />
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                  isActive ? "bg-white/15" : ""
+                }`}
+              >
+                <Icon size={18} />
+              </span>
               <span className="font-medium">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4">
+      <div className="border-t border-gray-200 p-4">
         <button
           type="button"
           onClick={() => {
@@ -76,10 +83,10 @@ export default function Sidebar({ activePage }: SidebarProps) {
             });
           }}
           disabled={isBootstrapping}
-          className="flex w-full cursor-pointer items-center space-x-3 px-4 py-2 text-slate-500 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full cursor-pointer items-center space-x-3 rounded-lg px-3 py-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <LogOut size={20} />
-          <span>Keluar</span>
+          <LogOut size={18} />
+          <span className="font-medium">Keluar</span>
         </button>
       </div>
     </aside>

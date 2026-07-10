@@ -48,7 +48,10 @@ interface AppContextType extends BootstrapData {
   setActiveVoter: (id: string | null) => Promise<void>;
   castVote: (candidateId: string) => Promise<void>;
   toggleAttendance: (residentId: string) => Promise<void>;
-  setVotingStatus: (status: VotingStatus, reset?: boolean) => Promise<void>;
+  setVotingStatus: (
+    status: VotingStatus,
+    options?: { reset?: boolean; agenda?: string; scheduledAt?: string },
+  ) => Promise<void>;
   addUser: (user: Omit<User, "id">) => Promise<void>;
   updateUser: (id: string, updates: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
@@ -257,10 +260,13 @@ export function AppProvider({
     await refresh();
   };
 
-  const setVotingStatusAction = async (status: VotingStatus, reset = false) => {
+  const setVotingStatusAction = async (
+    status: VotingStatus,
+    options?: { reset?: boolean; agenda?: string; scheduledAt?: string },
+  ) => {
     await request("/api/voting/status", {
       method: "POST",
-      body: JSON.stringify({ status, reset }),
+      body: JSON.stringify({ status, ...options }),
     });
     await refresh();
   };

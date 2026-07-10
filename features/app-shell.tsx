@@ -2,8 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { LayoutDashboard, Settings, UserCheck, Users, Vote } from "lucide-react";
+import NotificationBell from "@/features/components/NotificationBell";
 import Sidebar from "@/features/components/Sidebar";
 import { ToastProvider } from "@/features/components/ToastProvider";
+import UserMenu from "@/features/components/UserMenu";
 import { AppProvider, useApp } from "@/features/context/AppContext";
 import AccessControl from "@/features/pages/AccessControl";
 import Attendance from "@/features/pages/Attendance";
@@ -58,6 +61,24 @@ function AppContent() {
     }
   }, [activePage]);
 
+  const PageIcon = useMemo(() => {
+    switch (activePage) {
+      case "voting":
+        return Vote;
+      case "attendance":
+        return UserCheck;
+      case "residents":
+        return Users;
+      case "candidates":
+        return Settings;
+      case "access-control":
+        return Users;
+      case "dashboard":
+      default:
+        return LayoutDashboard;
+    }
+  }, [activePage]);
+
   const userInitials = useMemo(() => {
     if (!currentUser?.name) {
       return "U";
@@ -70,6 +91,13 @@ function AppContent() {
       .map((part) => part[0]?.toUpperCase() ?? "")
       .join("");
   }, [currentUser?.name]);
+
+  const roleLabel =
+    currentUser?.role === "super_admin"
+      ? "Super Admin"
+      : currentUser?.role === "admin"
+        ? "Administrator"
+        : "Warga";
 
   if (isBootstrapping && !currentUser) {
     return (
@@ -115,24 +143,18 @@ function AppContent() {
       <main className="ml-64 flex-1 overflow-y-auto">
         <header className="sticky top-0 z-20 border-b border-gray-300 bg-white/90 px-8 py-4 backdrop-blur">
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900">{pageTitle}</h1>
-              <p className="text-sm text-slate-500">Panel administrasi SuaraWarga</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <PageIcon size={20} />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">{pageTitle}</h1>
+                <p className="text-sm text-slate-500">Panel administrasi SuaraWarga</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 rounded-full bg-slate-100 px-3 py-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-                {userInitials}
-              </div>
-              <div className="pr-1 text-right">
-                <p className="text-sm font-semibold text-slate-900">{currentUser.name}</p>
-                <p className="text-xs capitalize text-slate-500">
-                  {currentUser.role === "super_admin"
-                    ? "Super Admin"
-                    : currentUser.role === "admin"
-                      ? "Administrator"
-                      : "Warga"}
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <UserMenu name={currentUser.name} roleLabel={roleLabel} initials={userInitials} />
             </div>
           </div>
         </header>

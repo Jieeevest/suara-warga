@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Route } from "next";
 import {
   BarChart,
   Bar,
@@ -14,9 +13,6 @@ import {
 } from "recharts";
 import {
   AlertTriangle,
-  ArrowRight,
-  BadgeCheck,
-  CheckCircle2,
   Clock3,
   Play,
   RotateCcw,
@@ -26,7 +22,6 @@ import {
   Trophy,
   UserCheck,
   Users,
-  Vote,
 } from "lucide-react";
 import { useApp } from "@/features/context/AppContext";
 
@@ -189,29 +184,6 @@ export default function Dashboard() {
     votingStatus,
   ]);
 
-  const quickActions = useMemo(() => {
-    return [
-      {
-        label: votingStatus === "not_started" ? "Mulai Voting" : "Lihat Kontrol Voting",
-        href: "/voting" as Route,
-        helper:
-          votingStatus === "not_started"
-            ? "Buka sesi dan mulai penghitungan suara."
-            : "Akses kontrol sesi dan status pemilihan.",
-      },
-      {
-        label: "Meja Registrasi",
-        href: "/attendance" as Route,
-        helper: "Kelola kehadiran dan pantau warga yang belum memilih.",
-      },
-      {
-        label: "Pantau Data Warga",
-        href: "/residents" as Route,
-        helper: "Cek warga aktif, alamat, dan status partisipasi.",
-      },
-    ];
-  }, [votingStatus]);
-
   const closedSummary = useMemo(() => {
     if (votingStatus !== "closed" || !leader) {
       return null;
@@ -226,18 +198,13 @@ export default function Dashboard() {
   }, [leader, stats.totalVotes, stats.turnoutPercentage, voteMargin, votingStatus]);
 
   const handlePrimaryAction = async () => {
-    if (votingStatus === "not_started") {
-      await setVotingStatus("active");
-      return;
-    }
-
     if (votingStatus === "active") {
       await setVotingStatus("closed");
       return;
     }
 
     if (window.confirm("Apakah Anda yakin ingin mereset seluruh sesi pemilihan?")) {
-      await setVotingStatus("not_started", true);
+      await setVotingStatus("not_started", { reset: true });
     }
   };
 
@@ -349,14 +316,24 @@ export default function Dashboard() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => void handlePrimaryAction()}
-              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-            >
-              <PrimaryActionIcon size={16} />
-              {primaryActionLabel}
-            </button>
+            {votingStatus === "not_started" ? (
+              <Link
+                href="/voting"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                <PrimaryActionIcon size={16} />
+                {primaryActionLabel}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handlePrimaryAction()}
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                <PrimaryActionIcon size={16} />
+                {primaryActionLabel}
+              </button>
+            )}
             <Link
               href="/attendance"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
@@ -426,122 +403,36 @@ export default function Dashboard() {
         </section>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <div className="flex items-center space-x-4 rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="rounded-lg bg-blue-100 p-3 text-blue-600">
-            <Users size={24} />
-          </div>
+      <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500">DPT Aktif</p>
-            <p className="text-2xl font-bold text-gray-800">{stats.activeVotersCount}</p>
-            <p className="mt-1 text-xs text-gray-400">{stats.totalResidents} total warga</p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4 rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="rounded-lg bg-emerald-100 p-3 text-emerald-600">
-            <Vote size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Suara Masuk</p>
-            <p className="text-2xl font-bold text-gray-800">{stats.totalVotes}</p>
-            <p className="mt-1 text-xs text-gray-400">
-              {stats.totalVotes > 0 ? "Penghitungan berjalan real-time" : "Belum ada suara masuk"}
+            <h3 className="text-lg font-semibold text-gray-800">
+              Perlu Ditindaklanjuti Hari Ini
+            </h3>
+            <p className="text-sm text-gray-500">
+              Exception yang perlu perhatian operator lebih dulu.
             </p>
           </div>
+          <AlertTriangle className="text-amber-500" size={20} />
         </div>
-
-        <div className="flex items-center space-x-4 rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="rounded-lg bg-amber-100 p-3 text-amber-600">
-            <Sparkles size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Partisipasi</p>
-            <p className="text-2xl font-bold text-gray-800">
-              {stats.turnoutPercentage.toFixed(1)}%
-            </p>
-            <p className="mt-1 text-xs text-gray-400">
-              Target {stats.targetTurnout}% • sisa {stats.votesNeededForTarget} suara
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4 rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="rounded-lg bg-slate-100 p-3 text-slate-700">
-            <UserCheck size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Kehadiran Fisik</p>
-            <p className="text-2xl font-bold text-gray-800">{stats.presentCount}</p>
-            <p className="mt-1 text-xs text-gray-400">
-              {stats.absentCount} warga aktif belum hadir
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">Aksi Cepat</h3>
-              <p className="text-sm text-gray-500">
-                Jalur cepat untuk kontrol sesi dan tindak lanjut lapangan.
-              </p>
+        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+          {actionItems.map((item) => (
+            <div
+              key={item.title}
+              className={`rounded-xl border border-gray-300 p-4 ${
+                item.tone === "amber"
+                  ? "bg-amber-50"
+                  : item.tone === "blue"
+                    ? "bg-blue-50"
+                    : "bg-emerald-50"
+              }`}
+            >
+              <p className="font-semibold text-slate-900">{item.title}</p>
+              <p className="mt-1 text-sm text-slate-600">{item.description}</p>
             </div>
-            <BadgeCheck className="text-blue-500" size={20} />
-          </div>
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {quickActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="group rounded-xl border border-gray-300 bg-slate-50 p-4 transition hover:bg-white"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-slate-900">{action.label}</p>
-                  <ArrowRight
-                    size={16}
-                    className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-slate-700"
-                  />
-                </div>
-                <p className="mt-2 text-sm text-slate-600">{action.helper}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Perlu Ditindaklanjuti Hari Ini
-              </h3>
-              <p className="text-sm text-gray-500">
-                Exception yang perlu perhatian operator lebih dulu.
-              </p>
-            </div>
-            <AlertTriangle className="text-amber-500" size={20} />
-          </div>
-          <div className="mt-5 space-y-3">
-            {actionItems.map((item) => (
-              <div
-                key={item.title}
-                className={`rounded-xl border border-gray-300 p-4 ${
-                  item.tone === "amber"
-                    ? "bg-amber-50"
-                    : item.tone === "blue"
-                      ? "bg-blue-50"
-                      : "bg-emerald-50"
-                }`}
-              >
-                <p className="font-semibold text-slate-900">{item.title}</p>
-                <p className="mt-1 text-sm text-slate-600">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+          ))}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
@@ -636,116 +527,44 @@ export default function Dashboard() {
         </section>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm xl:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">Monitoring Wilayah RT</h3>
-              <p className="text-sm text-gray-500">
-                Sorot RT yang tertinggal dan RT dengan antrean aktif.
-              </p>
-            </div>
-            <Users className="text-blue-500" size={20} />
+      <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Monitoring Wilayah RT</h3>
+            <p className="text-sm text-gray-500">
+              Sorot RT yang tertinggal dan RT dengan antrean aktif.
+            </p>
           </div>
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {rtBreakdown.slice(0, 6).map((item) => (
-              <div key={item.rt} className="rounded-xl border border-gray-300 bg-gray-50 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-slate-900">RT {item.rt}</p>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {item.turnout.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-orange-400 to-blue-500"
-                    style={{ width: `${item.turnout}%` }}
-                  />
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                  <span>{item.voted}/{item.total} sudah memilih</span>
-                  <span>{item.present} hadir</span>
-                </div>
-                <div className="mt-2 text-xs text-slate-600">
-                  {item.waiting > 0
-                    ? `${item.waiting} warga hadir menunggu giliran.`
-                    : "Tidak ada antrean hadir saat ini."}
-                </div>
+          <Users className="text-blue-500" size={20} />
+        </div>
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {rtBreakdown.slice(0, 6).map((item) => (
+            <div key={item.rt} className="rounded-xl border border-gray-300 bg-gray-50 p-4">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-slate-900">RT {item.rt}</p>
+                <span className="text-sm font-semibold text-slate-900">
+                  {item.turnout.toFixed(1)}%
+                </span>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                {votingStatus === "closed" ? "Rekap Final Sesi" : "Ringkasan Monitoring"}
-              </h3>
-              <p className="text-sm text-gray-500">
-                {votingStatus === "closed"
-                  ? "Ringkas hasil akhir untuk evaluasi cepat."
-                  : "Fokus pada antrean, target, dan distribusi suara."}
-              </p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-orange-400 to-blue-500"
+                  style={{ width: `${item.turnout}%` }}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                <span>{item.voted}/{item.total} sudah memilih</span>
+                <span>{item.present} hadir</span>
+              </div>
+              <div className="mt-2 text-xs text-slate-600">
+                {item.waiting > 0
+                  ? `${item.waiting} warga hadir menunggu giliran.`
+                  : "Tidak ada antrean hadir saat ini."}
+              </div>
             </div>
-            {votingStatus === "closed" ? (
-              <CheckCircle2 className="text-emerald-500" size={20} />
-            ) : (
-              <BadgeCheck className="text-blue-500" size={20} />
-            )}
-          </div>
-          <div className="mt-5 space-y-3">
-            {votingStatus === "closed" && closedSummary ? (
-              <>
-                <div className="rounded-xl border border-gray-300 bg-emerald-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                    Pemenang
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">{closedSummary.winner.name}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {closedSummary.winner.voteCount} suara dengan margin {closedSummary.margin} suara.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">
-                    Total suara final {closedSummary.totalVotes} dari {stats.activeVotersCount} DPT aktif.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">
-                    RT dengan turnout terendah tetap perlu evaluasi untuk sesi berikutnya:{" "}
-                    {rtBreakdown[0] ? `RT ${rtBreakdown[0].rt}` : "-"}.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">
-                    {stats.presentButNotVoted.length > 0
-                      ? `${stats.presentButNotVoted.length} warga hadir belum memilih dan bisa segera dikonversi menjadi suara.`
-                      : "Tidak ada antrean warga hadir yang belum memilih."}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">
-                    {leader
-                      ? `${leader.name} memimpin dengan ${leader.voteCount} suara.`
-                      : "Belum ada pemimpin sementara karena kandidat belum tersedia."}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-gray-300 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">
-                    {stats.votesNeededForTarget > 0
-                      ? `Masih perlu ${stats.votesNeededForTarget} suara untuk mencapai target partisipasi.`
-                      : "Target partisipasi sudah tercapai dan bisa difokuskan ke pemerataan per RT."}
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-      </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
