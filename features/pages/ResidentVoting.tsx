@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Check, CheckCircle2, LogOut, Vote, X } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useApp } from "@/features/context/AppContext";
 import { useToast } from "@/features/components/ToastProvider";
 
@@ -17,6 +18,20 @@ export default function ResidentVoting() {
   const residentData = useMemo(() => {
     return residents.find((resident) => resident.id === currentUser?.id);
   }, [currentUser?.id, residents]);
+
+  const totalVotes = useMemo(
+    () => candidates.reduce((sum, candidate) => sum + candidate.voteCount, 0),
+    [candidates],
+  );
+
+  const resultChartData = useMemo(() => {
+    return [...candidates]
+      .sort((left, right) => right.voteCount - left.voteCount)
+      .map((candidate) => ({
+        name: `No. ${candidate.number} ${candidate.name.split(" ")[0]}`,
+        votes: candidate.voteCount,
+      }));
+  }, [candidates]);
 
   const handleVoteConfirm = async () => {
     if (!selectedCandidateId || !currentUser) {
@@ -37,7 +52,7 @@ export default function ResidentVoting() {
   if (isSuccess || residentData?.hasVoted) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-emerald-50 p-6 text-center animate-fade-in">
-        <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-8 shadow-xl animate-scale-in">
+        <div className="w-full max-w-lg rounded-3xl border border-gray-200 bg-white p-8 shadow-xl animate-scale-in">
           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30">
             <CheckCircle2 size={48} className="text-white" />
           </div>
@@ -46,6 +61,30 @@ export default function ResidentVoting() {
             Suara Anda telah berhasil direkam. Partisipasi Anda sangat berarti untuk
             kemajuan lingkungan kita.
           </p>
+
+          <div className="mb-8 rounded-2xl border border-gray-200 bg-slate-50 p-5 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-800">Hasil Sementara</h3>
+              <span className="text-xs text-gray-500">{totalVotes} suara masuk</span>
+            </div>
+            <div className="mt-4 h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={resultChartData}>
+                  <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="votes" fill="#2563eb" radius={[8, 8, 0, 0]} barSize={36} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => {
