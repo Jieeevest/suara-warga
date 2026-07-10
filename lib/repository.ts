@@ -10,11 +10,8 @@ import type {
   VotingStatus,
 } from "./types";
 
-function generateResidentPassword(length = 6) {
-  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  return Array.from({ length }, () =>
-    characters[Math.floor(Math.random() * characters.length)],
-  ).join("");
+function generateResidentPassword(nik: string) {
+  return nik.slice(-6);
 }
 
 function mapResident(row: Record<string, unknown>): Resident {
@@ -218,7 +215,7 @@ export function getSessionUserById(role: string, id: string) {
 export function createResident(
   input: Omit<Resident, "id" | "hasVoted" | "isPresent">,
 ) {
-  const generatedPassword = generateResidentPassword();
+  const generatedPassword = generateResidentPassword(input.nik);
   const resident: Resident = {
     ...input,
     id: randomUUID(),
@@ -359,7 +356,7 @@ export function importResidents(
         input.gender,
         input.identityIssuedPlace,
         input.occupation,
-        generateResidentPassword(),
+        generateResidentPassword(input.nik),
         input.address,
         input.rt,
         input.rw,
@@ -536,9 +533,6 @@ export function castVote(candidateId: string, residentId: string) {
   }
   if (!resident.isPresent) {
     throw new Error("Warga harus ditandai hadir sebelum dapat memilih.");
-  }
-  if (getActiveVoterId() !== residentId) {
-    throw new Error("Bilik suara belum dibuka untuk warga ini.");
   }
 
   const candidate = db.prepare("SELECT * FROM candidates WHERE id = ?").get(candidateId);

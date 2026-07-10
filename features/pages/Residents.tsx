@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import * as XLSX from "xlsx";
 import {
-  ArrowRightLeft,
   Download,
   Edit2,
   Mail,
@@ -528,13 +527,11 @@ export default function Residents() {
 
   const stats = useMemo(() => {
     const active = residents.filter((resident) => resident.status === "Aktif").length;
-    const moved = residents.filter((resident) => resident.status === "Pindah").length;
     const deceased = residents.filter((resident) => resident.status === "Meninggal").length;
 
     return {
       total: residents.length,
       active,
-      moved,
       deceased,
     };
   }, [residents]);
@@ -622,7 +619,7 @@ export default function Residents() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-slate-50 p-4">
             <div className="rounded-lg bg-slate-200 p-2.5 text-slate-700">
               <Users size={20} />
@@ -641,21 +638,12 @@ export default function Residents() {
               <p className="text-2xl font-bold text-slate-900">{stats.active}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-amber-50 p-4">
-            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-600">
-              <ArrowRightLeft size={20} />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Pindah</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.moved}</p>
-            </div>
-          </div>
           <div className="flex items-center gap-3 rounded-xl border border-gray-300 bg-rose-50 p-4">
             <div className="rounded-lg bg-rose-100 p-2.5 text-rose-600">
               <UserX size={20} />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Meninggal</p>
+              <p className="text-sm text-slate-500">Tidak Aktif</p>
               <p className="text-2xl font-bold text-slate-900">{stats.deceased}</p>
             </div>
           </div>
@@ -666,7 +654,7 @@ export default function Residents() {
           </div>
         ) : (
           <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            Password akun warga dibuat otomatis secara acak dengan panjang 6 karakter saat data dibuat atau diimpor.
+            Password akun warga otomatis menggunakan 6 digit terakhir NIK saat data dibuat atau diimpor.
           </div>
         )}
       </section>
