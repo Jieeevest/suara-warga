@@ -564,7 +564,7 @@ export default function Residents() {
 
   const rtOptions = useMemo<SelectOption[]>(
     () =>
-      [...Array(10)].map((_, index) => {
+      [...Array(20)].map((_, index) => {
         const value = (index + 1).toString().padStart(3, "0");
         return { value, label: value };
       }),
@@ -572,10 +572,11 @@ export default function Residents() {
   );
 
   const rwOptions = useMemo<SelectOption[]>(
-    () => [
-      { value: "05", label: "05" },
-      { value: "06", label: "06" },
-    ],
+    () =>
+      [...Array(20)].map((_, index) => {
+        const value = (index + 1).toString().padStart(2, "0");
+        return { value, label: value };
+      }),
     [],
   );
 

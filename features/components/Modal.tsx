@@ -40,7 +40,7 @@ export default function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-xl animate-scale-in">
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-xl animate-scale-in">
         <div className="flex items-center justify-between border-b border-gray-300 p-6">
           <h3 className="text-xl font-bold text-gray-800">{title}</h3>
           <button
@@ -51,7 +51,7 @@ export default function Modal({
             <X size={20} />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="overflow-y-auto p-6">{children}</div>
       </div>
     </div>
   );
