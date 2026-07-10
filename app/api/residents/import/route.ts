@@ -9,6 +9,7 @@ type ImportResidentRow = Pick<
   | "nik"
   | "name"
   | "birthPlace"
+  | "birthDate"
   | "gender"
   | "identityIssuedPlace"
   | "occupation"
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
       nik: String(row.nik || "").trim(),
       name: String(row.name || "").trim(),
       birthPlace: String(row.birthPlace || "").trim(),
+      birthDate: String(row.birthDate || "").trim(),
       gender: normalizeGender(row.gender),
       identityIssuedPlace: String(row.identityIssuedPlace || "").trim(),
       occupation: String(row.occupation || "").trim(),

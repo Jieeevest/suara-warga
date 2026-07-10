@@ -4,6 +4,7 @@ export interface Resident {
   name: string;
   email: string;
   birthPlace: string;
+  birthDate?: string;
   gender: "Laki-laki" | "Perempuan" | "";
   identityIssuedPlace: string;
   occupation: string;

@@ -171,6 +171,16 @@ export default function Candidates() {
     reader.readAsDataURL(file);
   };
 
+  const isNumberTaken = useMemo(() => {
+    if (!formData.number) {
+      return false;
+    }
+
+    return candidates.some(
+      (candidate) => candidate.number === formData.number && candidate.id !== editingId,
+    );
+  }, [candidates, formData.number, editingId]);
+
   const rankedCandidates = useMemo(() => {
     return [...candidates].sort((left, right) => right.voteCount - left.voteCount);
   }, [candidates]);
@@ -278,6 +288,8 @@ export default function Candidates() {
               />
               {formErrors.number ? (
                 <p className="mt-1 text-xs text-red-600">{formErrors.number}</p>
+              ) : isNumberTaken ? (
+                <p className="mt-1 text-xs text-red-600">No urut sudah dipakai kandidat lain.</p>
               ) : null}
             </div>
             <div className="flex-1">

@@ -21,6 +21,7 @@ function mapResident(row: Record<string, unknown>): Resident {
     name: String(row.name),
     email: String(row.email || ""),
     birthPlace: String(row.birth_place || ""),
+    birthDate: String(row.birth_date || ""),
     gender: (String(row.gender || "") as Resident["gender"]),
     identityIssuedPlace: String(row.identity_issued_place || ""),
     occupation: String(row.occupation || ""),
@@ -225,9 +226,9 @@ export function createResident(
 
   db.prepare(`
     INSERT INTO residents (
-      id, nik, name, email, birth_place, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
+      id, nik, name, email, birth_place, birth_date, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
   `).run(
     resident.id,
@@ -235,6 +236,7 @@ export function createResident(
     resident.name,
     resident.email,
     resident.birthPlace,
+    resident.birthDate ?? "",
     resident.gender,
     resident.identityIssuedPlace,
     resident.occupation,
@@ -264,13 +266,14 @@ export function updateResident(id: string, updates: Partial<Resident>) {
   }
   db.prepare(`
     UPDATE residents
-    SET nik = ?, name = ?, email = ?, birth_place = ?, gender = ?, identity_issued_place = ?, occupation = ?, address = ?, rt = ?, rw = ?, phone_number = ?, status = ?, block = ?, has_voted = ?, is_present = ?
+    SET nik = ?, name = ?, email = ?, birth_place = ?, birth_date = ?, gender = ?, identity_issued_place = ?, occupation = ?, address = ?, rt = ?, rw = ?, phone_number = ?, status = ?, block = ?, has_voted = ?, is_present = ?, password = ?
     WHERE id = ?
   `).run(
     next.nik,
     next.name,
     next.email,
     next.birthPlace,
+    next.birthDate ?? "",
     next.gender,
     next.identityIssuedPlace,
     next.occupation,
@@ -282,6 +285,7 @@ export function updateResident(id: string, updates: Partial<Resident>) {
     next.block ?? "",
     next.hasVoted ? 1 : 0,
     next.isPresent ? 1 : 0,
+    generateResidentPassword(next.nik),
     id,
   );
 
@@ -301,6 +305,7 @@ export function importResidents(
       | "nik"
       | "name"
       | "birthPlace"
+      | "birthDate"
       | "gender"
       | "identityIssuedPlace"
       | "occupation"
@@ -317,14 +322,14 @@ export function importResidents(
   const findByNikStatement = db.prepare("SELECT id FROM residents WHERE nik = ?");
   const insertStatement = db.prepare(`
     INSERT INTO residents (
-      id, nik, name, email, birth_place, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
+      id, nik, name, email, birth_place, birth_date, gender, identity_issued_place, occupation, password, address, rt, rw, phone_number, status, block, has_voted, is_present
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0
     )
   `);
   const updateStatement = db.prepare(`
     UPDATE residents
-    SET name = ?, birth_place = ?, gender = ?, identity_issued_place = ?, occupation = ?
+    SET name = ?, birth_place = ?, birth_date = ?, gender = ?, identity_issued_place = ?, occupation = ?
     WHERE nik = ?
   `);
 
@@ -338,6 +343,7 @@ export function importResidents(
         updateStatement.run(
           input.name,
           input.birthPlace,
+          input.birthDate ?? "",
           input.gender,
           input.identityIssuedPlace,
           input.occupation,
@@ -353,6 +359,7 @@ export function importResidents(
         input.name,
         input.email,
         input.birthPlace,
+        input.birthDate ?? "",
         input.gender,
         input.identityIssuedPlace,
         input.occupation,

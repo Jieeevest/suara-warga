@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { randomInt } from "node:crypto";
 import Database from "better-sqlite3";
 import { INITIAL_CANDIDATES, INITIAL_RESIDENTS, getInitialUsers } from "./seed";
 
@@ -12,11 +11,8 @@ declare global {
   var __suraWargaDb: Database.Database | undefined;
 }
 
-function generateResidentPassword(length = 6) {
-  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  return Array.from({ length }, () =>
-    characters[randomInt(0, characters.length)],
-  ).join("");
+function generateResidentPassword(nik: string) {
+  return nik.slice(-6);
 }
 
 function ensureDatabase() {
@@ -38,6 +34,7 @@ function ensureDatabase() {
       name TEXT NOT NULL,
       email TEXT NOT NULL DEFAULT '',
       birth_place TEXT NOT NULL DEFAULT '',
+      birth_date TEXT NOT NULL DEFAULT '',
       gender TEXT NOT NULL DEFAULT '',
       identity_issued_place TEXT NOT NULL DEFAULT '',
       occupation TEXT NOT NULL DEFAULT '',
@@ -99,6 +96,10 @@ function ensureDatabase() {
     {
       key: "birth_place",
       statement: "ALTER TABLE residents ADD COLUMN birth_place TEXT NOT NULL DEFAULT ''",
+    },
+    {
+      key: "birth_date",
+      statement: "ALTER TABLE residents ADD COLUMN birth_date TEXT NOT NULL DEFAULT ''",
     },
     {
       key: "gender",
@@ -184,15 +185,15 @@ function ensureDatabase() {
     backfillResidentGender.run(resident.gender, resident.id);
     backfillResidentIdentityIssuedPlace.run(resident.identityIssuedPlace, resident.id);
     backfillResidentOccupation.run(resident.occupation, resident.id);
-    backfillResidentPassword.run(generateResidentPassword(), resident.id);
+    backfillResidentPassword.run(generateResidentPassword(resident.nik), resident.id);
   }
 
   const residentsWithoutPassword = db.prepare(
-    "SELECT id FROM residents WHERE COALESCE(password, '') = ''",
-  ).all() as Array<{ id?: string }>;
+    "SELECT id, nik FROM residents WHERE COALESCE(password, '') = ''",
+  ).all() as Array<{ id?: string; nik?: string }>;
   for (const resident of residentsWithoutPassword) {
-    if (resident.id) {
-      backfillResidentPassword.run(generateResidentPassword(), resident.id);
+    if (resident.id && resident.nik) {
+      backfillResidentPassword.run(generateResidentPassword(resident.nik), resident.id);
     }
   }
 

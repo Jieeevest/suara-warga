@@ -42,6 +42,7 @@ const residentSchema = yup.object({
     .required("Email wajib diisi.")
     .email("Format email tidak valid."),
   birthPlace: yup.string().trim().default(""),
+  birthDate: yup.string().trim().default(""),
   gender: yup
     .mixed<Resident["gender"]>()
     .oneOf(["", "Laki-laki", "Perempuan"], "Jenis kelamin tidak valid.")
@@ -71,6 +72,14 @@ const inputClass = (hasError: boolean) =>
   `w-full rounded-lg border p-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500 ${
     hasError ? "border-red-300 bg-red-50" : "border-gray-300"
   }`;
+
+const maskNik = (nik: string) => {
+  if (nik.length <= 6) {
+    return nik;
+  }
+
+  return "X".repeat(nik.length - 6) + nik.slice(-6);
+};
 
 export default function Residents() {
   const { residents, addResident, deleteResident, importResidents, updateResident, votingStatus } = useApp();
@@ -113,6 +122,7 @@ export default function Residents() {
           name: formData.name || "",
           email: formData.email || "",
           birthPlace: formData.birthPlace || "",
+          birthDate: formData.birthDate || "",
           gender: (formData.gender as Resident["gender"]) || "",
           identityIssuedPlace: formData.identityIssuedPlace || "",
           occupation: formData.occupation || "",
@@ -157,6 +167,7 @@ export default function Residents() {
       name: validated.name,
       email: validated.email,
       birthPlace: validated.birthPlace,
+      birthDate: validated.birthDate,
       gender: validated.gender,
       identityIssuedPlace: validated.identityIssuedPlace,
       occupation: validated.occupation,
@@ -471,6 +482,7 @@ export default function Residents() {
         .map((row) => ({
           name: getExcelValue(row, ["Nama"]),
           birthPlace: getExcelValue(row, ["Tempat Lahir"]),
+          birthDate: getExcelValue(row, ["Tanggal Lahir"]),
           gender: normalizeGender(getExcelValue(row, ["Jenis Kelamin"])),
           nik: getExcelValue(row, ["NIK"]),
           identityIssuedPlace: getExcelValue(row, [
@@ -484,7 +496,7 @@ export default function Residents() {
 
       if (importedResidents.length === 0) {
         throw new Error(
-          "Tidak ada data yang cocok. Pastikan kolom Excel berisi Nama, Tempat Lahir, Jenis Kelamin, NIK, Tempat di Keluarkan identitas, dan Pekerjaan.",
+          "Tidak ada data yang cocok. Pastikan kolom Excel berisi Nama, Tempat Lahir, Tanggal Lahir, Jenis Kelamin, NIK, Tempat di Keluarkan identitas, dan Pekerjaan.",
         );
       }
 
@@ -667,7 +679,7 @@ export default function Residents() {
               Telusuri warga berdasarkan nama, NIK, alamat, blok, atau status.
             </p>
             <p className="mt-2 text-xs text-slate-400">
-              Format Excel: No., Nama, Tempat Lahir, Jenis Kelamin, NIK, Tempat di Keluarkan identitas, Pekerjaan.
+              Format Excel: No., Nama, Tempat Lahir, Tanggal Lahir, Jenis Kelamin, NIK, Tempat di Keluarkan identitas, Pekerjaan.
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row">
@@ -748,6 +760,20 @@ export default function Residents() {
               />
               {formErrors.birthPlace ? (
                 <p className="mt-1 text-xs text-red-600">{formErrors.birthPlace}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Tanggal Lahir
+              </label>
+              <input
+                type="date"
+                className={inputClass(Boolean(formErrors.birthDate))}
+                value={formData.birthDate || ""}
+                onChange={(event) => setFieldValue("birthDate", event.target.value)}
+              />
+              {formErrors.birthDate ? (
+                <p className="mt-1 text-xs text-red-600">{formErrors.birthDate}</p>
               ) : null}
             </div>
             <div>
@@ -937,9 +963,9 @@ export default function Residents() {
                 <tr key={resident.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="text-sm font-semibold text-slate-900">{resident.name}</div>
-                    <div className="text-xs text-slate-500">{resident.nik}</div>
+                    <div className="text-xs text-slate-500">{maskNik(resident.nik)}</div>
                     <div className="mt-1 text-xs text-slate-400">
-                      {resident.gender || "-"} • {resident.birthPlace || "-"} • {resident.occupation || "-"}
+                      {resident.gender || "-"} • {resident.birthPlace || "-"}
                     </div>
                   </td>
                   <td className="p-4 text-sm text-slate-600">{resident.email || "-"}</td>
