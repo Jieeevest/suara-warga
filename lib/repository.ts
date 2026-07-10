@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { db } from "./db";
 import { emitVoteCast } from "./events";
 import type {
@@ -10,8 +10,11 @@ import type {
   VotingStatus,
 } from "./types";
 
-function generateResidentPassword(nik: string) {
-  return nik.slice(-6);
+function generateResidentPassword(length = 6) {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  return Array.from({ length }, () =>
+    characters[randomInt(0, characters.length)],
+  ).join("");
 }
 
 function mapResident(row: Record<string, unknown>): Resident {
@@ -125,17 +128,29 @@ export function findUserByCredentials(username: string, password: string) {
 }
 
 export function findResidentSessionByCredentials(
-  username: string,
+  nikLast8: string,
   password: string,
 ) {
-  const row = db.prepare("SELECT * FROM residents WHERE nik = ?").get(username);
-  const resident = row ? mapResident(row as Record<string, unknown>) : null;
-  const residentPassword = row ? String((row as Record<string, unknown>).password || "") : "";
-
-  if (!resident || password !== residentPassword || resident.status !== "Aktif") {
+  if (!/^\d{8}$/.test(nikLast8)) {
     return null;
   }
 
+  const rows = db
+    .prepare("SELECT * FROM residents WHERE nik LIKE '%' || ?")
+    .all(nikLast8) as Record<string, unknown>[];
+
+  const matches = rows
+    .map((row) => ({ resident: mapResident(row), password: String(row.password || "") }))
+    .filter(
+      ({ resident, password: residentPassword }) =>
+        resident.status === "Aktif" && residentPassword === password,
+    );
+
+  if (matches.length !== 1) {
+    return null;
+  }
+
+  const { resident } = matches[0];
   return {
     id: resident.id,
     name: resident.name,
@@ -216,7 +231,7 @@ export function getSessionUserById(role: string, id: string) {
 export function createResident(
   input: Omit<Resident, "id" | "hasVoted" | "isPresent">,
 ) {
-  const generatedPassword = generateResidentPassword(input.nik);
+  const generatedPassword = generateResidentPassword();
   const resident: Resident = {
     ...input,
     id: randomUUID(),
@@ -266,7 +281,7 @@ export function updateResident(id: string, updates: Partial<Resident>) {
   }
   db.prepare(`
     UPDATE residents
-    SET nik = ?, name = ?, email = ?, birth_place = ?, birth_date = ?, gender = ?, identity_issued_place = ?, occupation = ?, address = ?, rt = ?, rw = ?, phone_number = ?, status = ?, block = ?, has_voted = ?, is_present = ?, password = ?
+    SET nik = ?, name = ?, email = ?, birth_place = ?, birth_date = ?, gender = ?, identity_issued_place = ?, occupation = ?, address = ?, rt = ?, rw = ?, phone_number = ?, status = ?, block = ?, has_voted = ?, is_present = ?
     WHERE id = ?
   `).run(
     next.nik,
@@ -285,7 +300,6 @@ export function updateResident(id: string, updates: Partial<Resident>) {
     next.block ?? "",
     next.hasVoted ? 1 : 0,
     next.isPresent ? 1 : 0,
-    generateResidentPassword(next.nik),
     id,
   );
 
@@ -363,7 +377,7 @@ export function importResidents(
         input.gender,
         input.identityIssuedPlace,
         input.occupation,
-        generateResidentPassword(input.nik),
+        generateResidentPassword(),
         input.address,
         input.rt,
         input.rw,

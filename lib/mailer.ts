@@ -37,6 +37,8 @@ export async function sendResidentAccessEmail(payload: {
     auth: config.auth,
   });
 
+  const residentUsername = payload.residentNik.slice(-8);
+
   await transporter.sendMail({
     from: config.from,
     to: payload.to,
@@ -45,20 +47,20 @@ export async function sendResidentAccessEmail(payload: {
       `Halo ${payload.residentName},`,
       "",
       "Berikut akses akun Anda untuk sistem E-Voting Sura Warga:",
-      `Username / NIK: ${payload.residentNik}`,
+      `Username (8 digit terakhir NIK): ${residentUsername}`,
       `Password: ${payload.residentPassword}`,
       "",
-      "Silakan login menggunakan NIK sebagai username dan password yang diberikan panitia.",
+      "Silakan login menggunakan 8 digit terakhir NIK sebagai username dan password yang diberikan panitia.",
     ].join("\n"),
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
         <p>Halo <strong>${payload.residentName}</strong>,</p>
         <p>Berikut akses akun Anda untuk sistem <strong>E-Voting Sura Warga</strong>:</p>
         <ul>
-          <li><strong>Username / NIK:</strong> ${payload.residentNik}</li>
+          <li><strong>Username (8 digit terakhir NIK):</strong> ${residentUsername}</li>
           <li><strong>Password:</strong> ${payload.residentPassword}</li>
         </ul>
-        <p>Silakan login menggunakan NIK sebagai username dan password yang diberikan panitia.</p>
+        <p>Silakan login menggunakan 8 digit terakhir NIK sebagai username dan password yang diberikan panitia.</p>
       </div>
     `,
   });

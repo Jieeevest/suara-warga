@@ -134,7 +134,7 @@ export default function Login({ onForgotPassword }: LoginProps) {
                   htmlFor="username"
                   className="block text-sm font-medium text-slate-700"
                 >
-                  {mode === "resident" ? "NIK Warga" : "Username Admin"}
+                  {mode === "resident" ? "8 Digit Terakhir NIK" : "Username Admin"}
                 </label>
                 <div className="relative mt-1.5">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -149,12 +149,20 @@ export default function Login({ onForgotPassword }: LoginProps) {
                     name="username"
                     type="text"
                     required
+                    inputMode={mode === "resident" ? "numeric" : undefined}
+                    pattern={mode === "resident" ? "\\d{8}" : undefined}
+                    maxLength={mode === "resident" ? 8 : undefined}
                     className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
                     placeholder={
-                      mode === "resident" ? "Masukkan NIK Anda" : "Masukkan username admin"
+                      mode === "resident" ? "Masukkan 8 digit terakhir NIK" : "Masukkan username admin"
                     }
                     value={username}
-                    onChange={(event) => setUsername(event.target.value)}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setUsername(
+                        mode === "resident" ? value.replace(/\D/g, "").slice(0, 8) : value,
+                      );
+                    }}
                   />
                 </div>
               </div>
@@ -165,7 +173,7 @@ export default function Login({ onForgotPassword }: LoginProps) {
                     htmlFor="password"
                     className="block text-sm font-medium text-slate-700"
                   >
-                    {mode === "resident" ? "6 Digit Terakhir NIK" : "Password"}
+                    Password
                   </label>
                   <button
                     type="button"
@@ -186,20 +194,10 @@ export default function Login({ onForgotPassword }: LoginProps) {
                     type="password"
                     autoComplete="current-password"
                     required
-                    inputMode={mode === "resident" ? "numeric" : undefined}
-                    pattern={mode === "resident" ? "\\d{6}" : undefined}
-                    maxLength={mode === "resident" ? 6 : undefined}
                     className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    placeholder={
-                      mode === "resident" ? "Masukkan 6 digit terakhir NIK" : "Masukkan password"
-                    }
+                    placeholder="Masukkan password"
                     value={password}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      setPassword(
-                        mode === "resident" ? value.replace(/\D/g, "").slice(0, 6) : value,
-                      );
-                    }}
+                    onChange={(event) => setPassword(event.target.value)}
                   />
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { randomInt } from "node:crypto";
 import Database from "better-sqlite3";
 import { INITIAL_CANDIDATES, INITIAL_RESIDENTS, getInitialUsers } from "./seed";
 
@@ -11,8 +12,11 @@ declare global {
   var __suraWargaDb: Database.Database | undefined;
 }
 
-function generateResidentPassword(nik: string) {
-  return nik.slice(-6);
+function generateResidentPassword(length = 6) {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  return Array.from({ length }, () =>
+    characters[randomInt(0, characters.length)],
+  ).join("");
 }
 
 function ensureDatabase() {
@@ -185,15 +189,15 @@ function ensureDatabase() {
     backfillResidentGender.run(resident.gender, resident.id);
     backfillResidentIdentityIssuedPlace.run(resident.identityIssuedPlace, resident.id);
     backfillResidentOccupation.run(resident.occupation, resident.id);
-    backfillResidentPassword.run(generateResidentPassword(resident.nik), resident.id);
+    backfillResidentPassword.run(generateResidentPassword(), resident.id);
   }
 
   const residentsWithoutPassword = db.prepare(
-    "SELECT id, nik FROM residents WHERE COALESCE(password, '') = ''",
-  ).all() as Array<{ id?: string; nik?: string }>;
+    "SELECT id FROM residents WHERE COALESCE(password, '') = ''",
+  ).all() as Array<{ id?: string }>;
   for (const resident of residentsWithoutPassword) {
-    if (resident.id && resident.nik) {
-      backfillResidentPassword.run(generateResidentPassword(resident.nik), resident.id);
+    if (resident.id) {
+      backfillResidentPassword.run(generateResidentPassword(), resident.id);
     }
   }
 

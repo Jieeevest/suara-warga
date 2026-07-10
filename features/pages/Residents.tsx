@@ -265,7 +265,7 @@ export default function Residents() {
 
     const lines = [
       { label: "Nama", value: payload.resident.name },
-      { label: "NIK / Username", value: payload.resident.nik },
+      { label: "Username", value: payload.resident.nik.slice(-8) },
       { label: "Password", value: payload.resident.password },
       { label: "Email", value: payload.resident.email || "-" },
       { label: "RT / RW", value: `${resident.rt || "-"} / ${resident.rw || "-"}` },
@@ -299,7 +299,7 @@ export default function Residents() {
     });
 
     const notes = [
-      "Silakan login menggunakan NIK sebagai username.",
+      "Username adalah 8 digit terakhir NIK Anda.",
       "Gunakan password 6 karakter yang diberikan petugas.",
       "Simpan dokumen ini dengan aman dan jangan bagikan ke pihak lain.",
     ];
@@ -416,10 +416,10 @@ export default function Residents() {
         `Halo ${payload.resident.name},`,
         "",
         "Berikut akses akun Anda untuk sistem E-Voting Sura Warga:",
-        `Username / NIK: ${payload.resident.nik}`,
+        `Username (8 digit terakhir NIK): ${payload.resident.nik.slice(-8)}`,
         `Password: ${payload.resident.password}`,
         "",
-        "Silakan login menggunakan NIK sebagai username dan password di atas.",
+        "Silakan login menggunakan username dan password di atas.",
       ].join("\n");
 
       const phone = normalizeWhatsappNumber(resident.phoneNumber);
@@ -666,7 +666,7 @@ export default function Residents() {
           </div>
         ) : (
           <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            Password akun warga otomatis menggunakan 6 digit terakhir NIK saat data dibuat atau diimpor.
+            Password akun warga dibuat otomatis secara acak dengan panjang 6 karakter saat data dibuat atau diimpor.
           </div>
         )}
       </section>
