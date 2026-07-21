@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Preview Diagram — Sura Warga</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f6f8fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0d1117; }
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 1.25rem;
+    background: #24292f;
+    color: #fff;
+  }
+  .topbar strong { font-weight: 600; font-size: 0.95rem; }
+  .doc-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .doc-tabs button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #d0d7de;
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .doc-tabs button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .doc-tabs button.active {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.25);
+    color: #fff;
+    font-weight: 600;
+  }
+  .topbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .topbar a {
+    color: #d0d7de;
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  .topbar a:hover { color: #fff; }
+  .topbar a.zip-link {
+    background: rgba(255,255,255,0.1);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+  }
+  .topbar a.zip-link:hover { background: rgba(255,255,255,0.18); }
+  #sidebar-toggle {
+    display: none;
+    background: transparent;
+    border: 1px solid #454c54;
+    color: #fff;
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .layout {
+    display: flex;
+    align-items: flex-start;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  #sidebar {
+    position: sticky;
+    top: 49px;
+    width: 280px;
+    flex: 0 0 280px;
+    height: calc(100vh - 49px);
+    overflow-y: auto;
+    padding: 1.25rem 1rem 2rem;
+    border-right: 1px solid #d0d7de;
+  }
+  @media (prefers-color-scheme: dark) {
+    #sidebar { border-right-color: #30363d; }
+  }
+  #sidebar h2 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6e7781;
+    margin: 1.1rem 0 0.4rem;
+    padding: 0 0.5rem;
+  }
+  #sidebar h2:first-child { margin-top: 0; }
+  #sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  #sidebar a {
+    display: block;
+    padding: 0.32rem 0.6rem;
+    border-radius: 6px;
+    color: #24292f;
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    border-left: 2px solid transparent;
+  }
+  @media (prefers-color-scheme: dark) {
+    #sidebar a { color: #c9d1d9; }
+  }
+  #sidebar a.nav-flow { padding-left: 1.1rem; }
+  #sidebar a:hover {
+    background: rgba(9, 105, 218, 0.08);
+  }
+  #sidebar a.active {
+    background: rgba(9, 105, 218, 0.12);
+    border-left-color: #0969da;
+    color: #0969da;
+    font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) {
+    #sidebar a.active { color: #58a6ff; border-left-color: #58a6ff; }
+  }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+    padding: 2rem 1.5rem 4rem;
+  }
+  .markdown-body {
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    scroll-margin-top: 65px;
+  }
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3 {
+    scroll-margin-top: 65px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .markdown-body { background: #161b22; }
+  }
+  .markdown-body .mermaid {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .png-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    float: right;
+    margin-top: -0.25rem;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid #d0d7de;
+    border-radius: 999px;
+    color: #24292f;
+    text-decoration: none;
+    font-size: 0.75rem;
+  }
+  .png-download:hover {
+    background: rgba(9, 105, 218, 0.08);
+    border-color: #0969da;
+    color: #0969da;
+  }
+  @media (prefers-color-scheme: dark) {
+    .png-download { color: #c9d1d9; border-color: #30363d; }
+    .png-download:hover { border-color: #58a6ff; color: #58a6ff; }
+  }
+  .markdown-body pre:has(> code.language-mermaid) {
+    background: transparent;
+    padding: 0;
+  }
+  #status {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    white-space: pre-wrap;
+    padding: 1.5rem;
+    color: #57606a;
+  }
+  #status.error {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 900px) {
+    #sidebar-toggle { display: inline-block; }
+    #sidebar {
+      position: fixed;
+      top: 49px;
+      left: 0;
+      z-index: 15;
+      background: #fff;
+      transform: translateX(-100%);
+      transition: transform 0.2s ease;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    }
+    @media (prefers-color-scheme: dark) {
+      #sidebar { background: #0d1117; }
+    }
+    body.sidebar-open #sidebar { transform: translateX(0); }
+    .main { padding: 1.25rem 1rem 3rem; }
+    .markdown-body { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <button id="sidebar-toggle" type="button" aria-label="Buka daftar isi">☰</button>
+      <strong>Dokumentasi Skripsi — Sura Warga</strong>
+    </div>
+    <div class="doc-tabs" id="doc-tabs"></div>
+    <div class="topbar-links">
+      <a href="./diagrams-png.zip" download id="zip-link">⬇ Unduh Semua PNG (ZIP)</a>
+      <a href="./DIAGRAMS.md" target="_blank" rel="noopener" id="raw-md-link">Buka file .md mentah</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav id="sidebar" aria-label="Navigasi section">
+      <p style="padding:0 0.5rem; margin:0; font-size:0.75rem; color:#6e7781;">Memuat navigasi...</p>
+    </nav>
+    <div class="main">
+      <article class="markdown-body" id="content">
+        <p id="status">Memuat dokumen...</p>
+      </article>
+    </div>
+  </div>
+
+<script>
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDark ? "dark" : "default",
+    securityLevel: "loose",
+  });
+
+  function describeError(err) {
+    if (err instanceof Error) return err.message;
+    if (err && typeof err === "object") {
+      return err.str || err.message || JSON.stringify(err);
+    }
+    return String(err);
+  }
+
+  function slugify(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\- ]+/g, "")
+      .replace(/\s+/g, "-");
+  }
+
+  function buildSidebar(headings) {
+    const sidebar = document.getElementById("sidebar");
+    sidebar.innerHTML = "";
+
+    const list = document.createElement("ul");
+    let currentGroupList = list;
+
+    headings.forEach((heading) => {
+      if (heading.tagName === "H1") return;
+
+      if (heading.tagName === "H2") {
+        const isFlow = /^\d+\.\d+\s/.test(heading.textContent.trim());
+        const label = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = "#" + heading.id;
+        link.textContent = heading.textContent;
+        link.dataset.targetId = heading.id;
+        if (isFlow) link.classList.add("nav-flow");
+        label.appendChild(link);
+        currentGroupList.appendChild(label);
+      }
+    });
+
+    sidebar.appendChild(list);
+  }
+
+  function assignHeadingIds(container) {
+    const used = new Set();
+    const headings = Array.from(container.querySelectorAll("h1, h2, h3"));
+    headings.forEach((heading) => {
+      let slug = slugify(heading.textContent) || "section";
+      let unique = slug;
+      let counter = 1;
+      while (used.has(unique)) {
+        unique = slug + "-" + counter;
+        counter += 1;
+      }
+      used.add(unique);
+      heading.id = unique;
+    });
+    return headings;
+  }
+
+  function setupActiveHighlight(headings) {
+    const links = Array.from(document.querySelectorAll("#sidebar a"));
+    if (!headings.length || !links.length) return;
+
+    const linkById = new Map(links.map((link) => [link.dataset.targetId, link]));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const link = linkById.get(entry.target.id);
+          if (!link) return;
+          if (entry.isIntersecting) {
+            links.forEach((l) => l.classList.remove("active"));
+            link.classList.add("active");
+          }
+        });
+      },
+      { rootMargin: "-64px 0px -70% 0px", threshold: 0 },
+    );
+
+    headings
+      .filter((heading) => heading.tagName === "H2")
+      .forEach((heading) => observer.observe(heading));
+  }
+
+  function nearestPrecedingHeadingText(node, root) {
+    let current = node;
+    while (current) {
+      let sibling = current.previousElementSibling;
+      while (sibling) {
+        if (/^H[1-3]$/.test(sibling.tagName)) return sibling.textContent.trim();
+        sibling = sibling.previousElementSibling;
+      }
+      current = current.parentElement;
+      if (!current || current === root) break;
+    }
+    return null;
+  }
+
+  // Nama file di sini mengikuti pola pada docs/export-png.mjs:
+  // "<nomor urut 2 digit>-<slug judul section>.png", diurutkan berdasar
+  // urutan kemunculan diagram di halaman.
+  function addPngDownloadLinks(root) {
+    const mermaidNodes = Array.from(root.querySelectorAll(".mermaid"));
+    mermaidNodes.forEach((node, index) => {
+      const headingText = nearestPrecedingHeadingText(node, root) || "diagram-" + (index + 1);
+      const filename = String(index + 1).padStart(2, "0") + "-" + slugify(headingText) + ".png";
+      const link = document.createElement("a");
+      link.className = "png-download";
+      link.href = "./diagrams-png/" + filename;
+      link.setAttribute("download", filename);
+      link.textContent = "⬇ PNG";
+      link.title = "Unduh diagram ini sebagai PNG";
+      node.insertAdjacentElement("beforebegin", link);
+    });
+  }
+
+  function setupMobileToggle() {
+    const toggle = document.getElementById("sidebar-toggle");
+    toggle.addEventListener("click", () => {
+      document.body.classList.toggle("sidebar-open");
+    });
+    document.getElementById("sidebar").addEventListener("click", (event) => {
+      if (event.target.tagName === "A") {
+        document.body.classList.remove("sidebar-open");
+      }
+    });
+  }
+
+  const DOCS = [
+    { id: "diagrams", title: "Diagram Sistem", file: "DIAGRAMS.md" },
+    { id: "bab3-kripto", title: "Bab 3 - Kriptografi", file: "BAB3-KRIPTOGRAFI.md" },
+  ];
+
+  function currentDocFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("doc");
+    return DOCS.find((doc) => doc.file === requested) || DOCS[0];
+  }
+
+  function renderDocTabs(activeDoc) {
+    const tabs = document.getElementById("doc-tabs");
+    tabs.innerHTML = "";
+    DOCS.forEach((doc) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = doc.title;
+      if (doc.file === activeDoc.file) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        if (doc.file === activeDoc.file) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set("doc", doc.file);
+        window.history.pushState({}, "", url);
+        renderPreview(doc.file);
+      });
+      tabs.appendChild(btn);
+    });
+  }
+
+  async function renderPreview(filename) {
+    const activeDoc = DOCS.find((doc) => doc.file === filename) || DOCS[0];
+    renderDocTabs(activeDoc);
+    document.getElementById("raw-md-link").href = "./" + activeDoc.file;
+    document.getElementById("zip-link").style.display =
+      activeDoc.file === "DIAGRAMS.md" ? "" : "none";
+    document.title = activeDoc.title + " — Sura Warga";
+
+    const el = document.getElementById("content");
+    el.innerHTML = '<p id="status">Memuat ' + activeDoc.file + "...</p>";
+    try {
+      const response = await fetch("./" + activeDoc.file, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Gagal memuat " + activeDoc.file + " (status " + response.status + ")");
+      }
+      const markdown = await response.text();
+      el.innerHTML = marked.parse(markdown);
+
+      const mermaidBlocks = Array.from(el.querySelectorAll("code.language-mermaid"));
+      mermaidBlocks.forEach((code, index) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "mermaid";
+        wrapper.id = "mermaid-diagram-" + index;
+        wrapper.textContent = code.textContent;
+        code.parentElement.replaceWith(wrapper);
+      });
+
+      // Render tiap diagram satu per satu supaya satu diagram yang gagal
+      // parse tidak menggagalkan seluruh pratinjau halaman.
+      for (const node of Array.from(el.querySelectorAll(".mermaid"))) {
+        const source = node.textContent;
+        try {
+          const { svg } = await mermaid.render(node.id + "-svg", source);
+          node.innerHTML = svg;
+        } catch (err) {
+          node.innerHTML =
+            '<p class="error" style="text-align:left;">Gagal render diagram (' +
+            node.id +
+            "): " +
+            describeError(err) +
+            "</p>";
+        }
+      }
+
+      const headings = assignHeadingIds(el);
+      buildSidebar(headings);
+      setupActiveHighlight(headings);
+      setupMobileToggle();
+      addPngDownloadLinks(el);
+    } catch (err) {
+      el.innerHTML =
+        '<p id="status" class="error">Gagal memuat pratinjau: ' +
+        describeError(err) +
+        "\n\n" +
+        "Kemungkinan penyebab: file ini dibuka langsung lewat file:// sehingga fetch() ke " +
+        activeDoc.file +
+        " diblokir kebijakan CORS browser.\n\n" +
+        "Jalankan lewat local server dari root folder docs/, contoh:\n" +
+        "  ./docs/serve.sh\n" +
+        "  atau: python3 -m http.server --directory docs 8080\n" +
+        "lalu buka http://localhost:PORT/index.html</p>";
+    }
+  }
+
+  window.addEventListener("popstate", () => renderPreview(currentDocFromUrl().file));
+  renderPreview(currentDocFromUrl().file);
+</script>
+</body>
+</html>
